@@ -1,0 +1,25 @@
+{
+  "formatVersion": "1.0",
+  "movies": {
+    "12345": {
+      "type": "archive",
+      "url": "https://archive.org/details/contoh-film",
+      "label": "Archive.org",
+      "quality": "720p"
+    }
+  },
+  "series": {
+    "episodes": {
+      "12345_s1e1": {
+        "type": "youtube",
+        "url": "https://www.youtube.com/watch?v=CONTOH_VIDEO_ID",
+        "label": "YouTube",
+        "quality": "1080p"
+      }
+    }
+  },
+  "defaults": {
+    "enabledSources": ["archive", "youtube", "vimeo", "direct"],
+    "autoPlay": false
+  }
+}

@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  image         String?
+  watchlist     Watchlist[]
+  createdAt     DateTime  @default(now())
+}
+
+model Watchlist {
+  id        String   @id @default(cuid())
+  userId    String
+  contentId String
+  contentType String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model CustomContent {
+  id              String    @id @default(cuid())
+  title           String
+  overview        String?
+  posterPath      String?
+  backdropPath    String?
+  releaseYear     Int?
+  rating          Float?
+  durationMinutes Int?
+  genres          String?
+  type            String // "movie" atau "tv"
+  seasons         Int?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
