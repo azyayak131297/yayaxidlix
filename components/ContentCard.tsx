@@ -13,6 +13,7 @@ export function ContentCard({
   releaseDate,
   firstAirDate,
   mediaType,
+  href,
 }: {
   id: string | number
   title?: string
@@ -21,6 +22,7 @@ export function ContentCard({
   releaseDate?: string
   firstAirDate?: string
   mediaType: "movie" | "tv"
+  href?: string
 }) {
   const [imgError, setImgError] = useState(false)
   const [watchlisted, setWatchlisted] = useState(false)
@@ -28,7 +30,7 @@ export function ContentCard({
   const displayTitle = title || name || "Untitled"
   const displayDate = releaseDate || firstAirDate || ""
   const year = getYear(displayDate)
-  const href = mediaType === "movie" ? `/movie/${id}` : `/series/${id}`
+  const cardHref = href || `/watch/${mediaType}/${id}`
   const imgSrc = posterPath ? getImageUrl(posterPath, "w300") : ""
   const showPlaceholder = !posterPath || imgError || !imgSrc
   const contentId = String(id)
@@ -55,7 +57,7 @@ export function ContentCard({
 
   return (
     <Link
-      href={href}
+      href={cardHref}
       className="group relative flex-shrink-0 w-[160px] sm:w-[180px] transition-transform duration-200 hover:scale-105"
     >
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-zinc-800">

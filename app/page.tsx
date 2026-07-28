@@ -4,6 +4,8 @@ import { ContentCard } from "@/components/ContentCard"
 import { Header } from "@/components/Header"
 import Link from "next/link"
 import Image from "next/image"
+import { loadLocalContent } from "@/lib/local-content"
+import { loadSiteSettings } from "@/lib/site-settings"
 
 async function getCustomContent() {
   try {
@@ -20,23 +22,40 @@ async function getCustomContent() {
 
 export const dynamic = "force-dynamic"
 
+async function getContinueWatching() {
+  try {
+    const res = await fetch(`${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/continue-watching`, {
+      cache: "no-store",
+    })
+    if (!res.ok) return []
+    const json = await res.json()
+    return json.data || []
+  } catch {
+    return []
+  }
+}
+
 export default async function Home() {
-  const [trending, movies, series, customContent] = await Promise.all([
+  const [trending, movies, series, customContent, localContent, continueWatching] = await Promise.all([
     fetchTrending(),
     fetchNowPlayingMovies(),
     fetchOnTheAirSeries(),
     getCustomContent(),
+    Promise.resolve(loadLocalContent()),
+    getContinueWatching(),
   ])
 
-  const hasTmdb = trending.length > 0 || movies.length > 0 || series.length > 0
+  const settings = loadSiteSettings()
+  const hasTmdb = settings.features.showTmdb && (trending.length > 0 || movies.length > 0 || series.length > 0)
   const hasCustom = customContent.length > 0
-  const hasAny = hasTmdb || hasCustom
+  const hasLocal = settings.features.showLocal && localContent.length > 0
+  const hasAny = hasTmdb || hasCustom || hasLocal
 
   const featured = hasTmdb ? trending[0] : null
   const featuredMovie = movies[0]
   const featuredSeries = series[0]
   const f = featured as any
-  const heroTitle = f?.title || f?.name || featuredMovie?.title || featuredSeries?.name || (hasCustom ? customContent[0]?.title : null) || "Selamat Datang di IDLIX"
+  const heroTitle = f?.title || f?.name || featuredMovie?.title || featuredSeries?.name || (hasCustom ? customContent[0]?.title : null) || (hasLocal ? localContent[0]?.title : null) || settings.site.title
   const heroPoster = f?.poster_path || featuredMovie?.poster_path || featuredSeries?.poster_path || null
   const heroBackdrop = f?.backdrop_path || featuredMovie?.backdrop_path || featuredSeries?.backdrop_path || null
   const heroYear = f?.release_date?.slice(0, 4) || f?.first_air_date?.slice(0, 4) || featuredMovie?.release_date?.slice(0, 4) || featuredSeries?.first_air_date?.slice(0, 4) || ""
@@ -146,35 +165,96 @@ export default async function Home() {
               </div>
             </section>
 
-            {customContent.length > 0 && (
+            {continueWatching.length > 0 && (
               <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold">Konten Manual</h2>
-                  <Link href="/tonton" className="text-red-400 hover:text-red-300 text-sm font-medium">Lihat semua →</Link>
+                  <h2 className="text-2xl font-bold">Terakhir Menonton</h2>
                 </div>
                 <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                  {customContent.map((item: any) => (
-                    <ContentCard
-                      key={item.id}
-                      id={item.id}
-                      title={item.title}
-                      posterPath={item.posterPath}
-                      releaseDate={item.releaseYear ? String(item.releaseYear) : undefined}
-                      mediaType={item.type as "movie" | "tv"}
-                    />
-                  ))}
+                  {continueWatching.map((item: any) => {
+                    const href = item.contentType === "tv" ? `/watch/tv/${item.contentId}` : `/watch/movie/${item.contentId}`
+                    return (
+                      <Link
+                        key={`${item.contentId}-${item.episodeKey || ""}`}
+                        href={href}
+                        className="flex-shrink-0 w-48 rounded-lg border border-zinc-800 bg-zinc-900 p-4 hover:border-zinc-600 transition-colors"
+                      >
+                        <h3 className="font-medium text-white truncate mb-1">{item.contentId}</h3>
+                        <p className="text-xs text-zinc-400 mb-2">
+                          {item.contentType === "tv" ? "Series" : "Film"}
+                          {item.episodeKey ? ` • ${item.episodeKey}` : ""}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-red-600" style={{ width: `${item.durationSeconds > 0 ? (item.progressSeconds / item.durationSeconds) * 100 : 0}%` }} />
+                          </div>
+                          <span className="text-[10px] text-zinc-500">{Math.round((item.progressSeconds / item.durationSeconds) * 100) || 0}%</span>
+                        </div>
+                      </Link>
+                    )
+                  })}
                 </div>
               </section>
             )}
 
-            {movies.length > 0 && (
+            {customContent.length > 0 && localContent.length > 0 && (
+              <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold">Daftar Populer</h2>
+                  <Link href="/tonton" className="text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: settings.site.accentColor }}>Lihat semua →</Link>
+                </div>
+                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                  {[...customContent, ...localContent]
+                    .sort((a: any, b: any) => (b.viewCount || 0) - (a.viewCount || 0))
+                    .slice(0, 20)
+                    .map((item: any) => (
+                      <ContentCard
+                        key={item.id}
+                        id={item.id}
+                        title={item.title}
+                        posterPath={item.posterPath}
+                        releaseDate={item.releaseYear ? String(item.releaseYear) : undefined}
+                        mediaType={item.type as "movie" | "tv"}
+                        href={item.type === "tv" ? `/watch/tv/${item.id}` : `/watch/movie/${item.id}`}
+                      />
+                    ))}
+                </div>
+              </section>
+            )}
+
+            {customContent.length > 0 && localContent.length > 0 && (
+              <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold">Terbaru</h2>
+                  <Link href="/tonton" className="text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: settings.site.accentColor }}>Lihat semua →</Link>
+                </div>
+                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                  {[...customContent, ...localContent]
+                    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .slice(0, 20)
+                    .map((item: any) => (
+                      <ContentCard
+                        key={item.id}
+                        id={item.id}
+                        title={item.title}
+                        posterPath={item.posterPath}
+                        releaseDate={item.releaseYear ? String(item.releaseYear) : undefined}
+                        mediaType={item.type as "movie" | "tv"}
+                        href={item.type === "tv" ? `/watch/tv/${item.id}` : `/watch/movie/${item.id}`}
+                      />
+                    ))}
+                </div>
+              </section>
+            )}
+
+            {hasTmdb && movies.length > 0 && (
               <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold">Film Terbaru</h2>
-                  <Link href="/tonton" className="text-red-400 hover:text-red-300 text-sm font-medium">Lihat semua →</Link>
+                  <Link href="/tonton" className="text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: settings.site.accentColor }}>Lihat semua →</Link>
                 </div>
                 <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                  {movies.slice(0, 10).map((movie: TmdbMovie) => (
+                  {movies.slice(0, 20).map((movie: TmdbMovie) => (
                     <ContentCard
                       key={movie.id}
                       id={movie.id}
@@ -188,14 +268,14 @@ export default async function Home() {
               </section>
             )}
 
-            {series.length > 0 && (
+            {hasTmdb && series.length > 0 && (
               <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold">Serial Terbaru</h2>
-                  <Link href="/tonton" className="text-red-400 hover:text-red-300 text-sm font-medium">Lihat semua →</Link>
+                  <Link href="/tonton" className="text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: settings.site.accentColor }}>Lihat semua →</Link>
                 </div>
                 <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                  {series.slice(0, 10).map((show: TmdbSeries) => (
+                  {series.slice(0, 20).map((show: TmdbSeries) => (
                     <ContentCard
                       key={show.id}
                       id={show.id}
@@ -209,14 +289,14 @@ export default async function Home() {
               </section>
             )}
 
-            {trending.length > 0 && (
+            {hasTmdb && trending.length > 0 && (
               <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold">Trending</h2>
-                  <Link href="/tonton" className="text-red-400 hover:text-red-300 text-sm font-medium">Lihat semua →</Link>
+                  <Link href="/tonton" className="text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: settings.site.accentColor }}>Lihat semua →</Link>
                 </div>
                 <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                  {trending.slice(0, 10).map((item: TmdbTrendingItem) => (
+                  {trending.slice(0, 20).map((item: TmdbTrendingItem) => (
                     <ContentCard
                       key={`${item.media_type}-${item.id}`}
                       id={item.id}
@@ -237,25 +317,25 @@ export default async function Home() {
                 <Link href="/genre" className="group relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-900">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center p-4">
-                    <span className="text-white group-hover:text-red-400 transition-colors font-semibold">Genre</span>
+                    <span className="text-white group-hover:transition-colors font-semibold" style={{ "--tw-text-opacity": "1" } as any}>Genre</span>
                   </div>
                 </Link>
                 <Link href="/country" className="group relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-900">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center p-4">
-                    <span className="text-white group-hover:text-red-400 transition-colors font-semibold">Negara</span>
+                    <span className="text-white group-hover:transition-colors font-semibold">Negara</span>
                   </div>
                 </Link>
                 <Link href="/year" className="group relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-900">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center p-4">
-                    <span className="text-white group-hover:text-red-400 transition-colors font-semibold">Tahun</span>
+                    <span className="text-white group-hover:transition-colors font-semibold">Tahun</span>
                   </div>
                 </Link>
                 <Link href="/network" className="group relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-900">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center p-4">
-                    <span className="text-white group-hover:text-red-400 transition-colors font-semibold">Jaringan</span>
+                    <span className="text-white group-hover:transition-colors font-semibold">Jaringan</span>
                   </div>
                 </Link>
               </div>

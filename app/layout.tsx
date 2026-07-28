@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Footer } from "@/components/Footer";
+import AuthProvider from "@/components/AuthProvider";
+import { SiteSettingsProvider } from "@/components/SiteSettingsProvider";
+import { loadSiteSettings } from "@/lib/site-settings";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,31 +16,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const settings = loadSiteSettings()
+
 export const metadata: Metadata = {
   title: {
-    default: "IDLIX — Hybrid Streaming Platform",
-    template: "%s | IDLIX",
+    default: settings.site.title,
+    template: "%s | " + settings.site.title,
   },
-  description:
-    "Hybrid streaming platform combining TMDB data with custom content support. Browse movies, TV series, and filter by genre, country, year, and network.",
-  keywords: [
-    "streaming",
-    "movies",
-    "TV series",
-    "TMDB",
-    "custom content",
-    "watch online",
-  ],
-  authors: [{ name: "IDLIX" }],
-  viewport: "width=device-width, initial-scale=1",
-  themeColor: "#000000",
-  openGraph: {
-    title: "IDLIX — Hybrid Streaming Platform",
-    description:
-      "Browse and watch movies and TV series on IDLIX. Hybrid streaming with TMDB data and custom content support.",
-    type: "website",
-    siteName: "IDLIX",
-  },
+  description: settings.site.description,
+  themeColor: settings.site.accentColor,
   icons: {
     icon: "/favicon.svg",
   },
@@ -48,13 +35,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = loadSiteSettings()
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      style={{ ["--accent" as any]: settings.site.accentColor, ["--accent-hover" as any]: settings.site.accentColor }}
     >
       <body className="min-h-full flex flex-col">
-        {children}
+        <SiteSettingsProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </SiteSettingsProvider>
         <Footer />
       </body>
     </html>

@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server"
 import { fetchGenres } from "@/lib/tmdb"
+import { loadGenres } from "@/lib/genres"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
-    const genres = await fetchGenres()
-    return NextResponse.json({ data: genres })
-  } catch (error) {
-    console.error("Error fetching genres:", error)
-    return NextResponse.json({ data: [] })
+    const tmdbGenres = await fetchGenres()
+    if (tmdbGenres.length > 0) {
+      return NextResponse.json({ data: tmdbGenres })
+    }
+  } catch {
+    // fallback to local genres
   }
+
+  const localGenres = loadGenres()
+  return NextResponse.json({ data: localGenres })
 }

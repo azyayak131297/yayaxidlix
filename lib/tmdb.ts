@@ -40,6 +40,19 @@ export interface TmdbSeries {
   seasons?: { id: number; name: string; episode_count: number; season_number: number; poster_path?: string | null }[]
 }
 
+export interface TmdbCast {
+  id: number
+  name: string
+  character?: string
+  profile_path?: string | null
+  order?: number
+}
+
+export interface TmdbCredits {
+  cast: TmdbCast[]
+  crew?: any[]
+}
+
 export interface TmdbEpisode {
   id: number
   name: string
@@ -117,7 +130,7 @@ export async function fetchOnTheAirSeries(): Promise<TmdbSeries[]> {
 export async function fetchMovieDetails(id: string | number): Promise<TmdbMovie | null> {
   if (!isValidApiKey(API_KEY)) return null
   try {
-    const res = await fetch(`${TMDB_BASE_URL}/movie/${id}?api_key=${API_KEY}&language=id-ID`, {
+    const res = await fetch(`${TMDB_BASE_URL}/movie/${id}?api_key=${API_KEY}&language=id-ID&append_to_response=videos`, {
       next: { revalidate: 3600 }
     })
     if (!res.ok) {
@@ -132,7 +145,37 @@ export async function fetchMovieDetails(id: string | number): Promise<TmdbMovie 
 export async function fetchSeriesDetails(id: string | number): Promise<TmdbSeries | null> {
   if (!isValidApiKey(API_KEY)) return null
   try {
-    const res = await fetch(`${TMDB_BASE_URL}/tv/${id}?api_key=${API_KEY}&language=id-ID`, {
+    const res = await fetch(`${TMDB_BASE_URL}/tv/${id}?api_key=${API_KEY}&language=id-ID&append_to_response=videos`, {
+      next: { revalidate: 3600 }
+    })
+    if (!res.ok) {
+      return null
+    }
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchMovieCredits(id: string | number): Promise<TmdbCredits | null> {
+  if (!isValidApiKey(API_KEY)) return null
+  try {
+    const res = await fetch(`${TMDB_BASE_URL}/movie/${id}/credits?api_key=${API_KEY}&language=id-ID`, {
+      next: { revalidate: 3600 }
+    })
+    if (!res.ok) {
+      return null
+    }
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchSeriesCredits(id: string | number): Promise<TmdbCredits | null> {
+  if (!isValidApiKey(API_KEY)) return null
+  try {
+    const res = await fetch(`${TMDB_BASE_URL}/tv/${id}/credits?api_key=${API_KEY}&language=id-ID`, {
       next: { revalidate: 3600 }
     })
     if (!res.ok) {
@@ -195,6 +238,7 @@ export async function searchTmdb(query: string): Promise<{
 export interface TmdbGenre {
   id: number
   name: string
+  imageUrl?: string
 }
 
 export async function fetchGenres(): Promise<TmdbGenre[]> {

@@ -1,7 +1,10 @@
-import { fetchMovieDetails, fetchTrending } from "@/lib/tmdb"
+import { fetchMovieDetails, fetchTrending, fetchMovieCredits } from "@/lib/tmdb"
 import { prisma } from "@/lib/prisma"
 import { getVideoSource, loadVideoSources } from "@/lib/video-sources"
+import { loadLocalContent, getLocalContentById } from "@/lib/local-content"
+import { loadSiteSettings } from "@/lib/site-settings"
 import { VideoPlayer } from "@/components/VideoPlayer"
+import { VideoProgress } from "@/components/VideoProgress"
 import { ContentRow } from "@/components/ContentRow"
 import { Header } from "@/components/Header"
 import { WatchlistToggle } from "@/components/WatchlistToggle"
@@ -22,10 +25,12 @@ async function getRelated() {
 export default async function MoviePage({ params }: MoviePageProps) {
   const { id } = await params
   const isCustomId = id.startsWith("custom-")
+  const isLocalId = id.startsWith("local-")
   const videoSources = loadVideoSources()
 
   let movie: any = null
   let customId: string | undefined
+  let localContent: any = null
 
   if (isCustomId) {
     customId = id
@@ -43,6 +48,19 @@ export default async function MoviePage({ params }: MoviePageProps) {
         </div>
       )
     }
+  } else if (isLocalId) {
+    localContent = getLocalContentById(id)
+    if (!localContent) {
+      return (
+        <div className="min-h-screen bg-black text-white flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-2">Film tidak ditemukan</h1>
+            <p className="text-zinc-400">Konten lokal ini belum diisi di data/local-content.json.</p>
+          </div>
+        </div>
+      )
+    }
+    movie = localContent
   } else {
     movie = await fetchMovieDetails(id)
     if (!movie) {
@@ -60,14 +78,16 @@ export default async function MoviePage({ params }: MoviePageProps) {
 
   const videoSource = isCustomId
     ? videoSources.custom[customId as string] || null
-    : getVideoSource("movie", movie.id)
+    : isLocalId
+      ? videoSources.custom[id] || null
+      : getVideoSource("movie", movie.id)
 
   const related = await getRelated()
   const relatedFiltered = related
     .filter((item) => item.media_type === "movie")
-    .filter((item) => isCustomId ? false : item.id !== movie.id)
+    .filter((item) => isCustomId || isLocalId ? false : item.id !== movie.id)
 
-  const isTmdb = !isCustomId
+  const isTmdb = !isCustomId && !isLocalId
   const title = movie.title || "Tanpa Judul"
   const posterPath = isTmdb ? movie.poster_path : movie.posterPath || ""
   const backdropPath = isTmdb ? movie.backdrop_path : movie.backdropPath || ""
@@ -76,6 +96,10 @@ export default async function MoviePage({ params }: MoviePageProps) {
   const voteAverage = isTmdb ? movie.vote_average : movie.rating
   const durationMinutes = isTmdb ? movie.runtime : movie.durationMinutes
   const genres = isTmdb ? movie.genres || [] : (movie.genres || "").split(",").map((g: string) => g.trim()).filter(Boolean)
+
+  const credits = isTmdb ? await fetchMovieCredits(id) : null
+  const cast = credits?.cast?.slice(0, 12) || []
+  const settings = loadSiteSettings()
 
   const watchHref = isCustomId ? `/watch/movie/${id}` : `/watch/movie/${movie.id}`
   const contentIdForWatchlist = isCustomId ? id : String(movie.id)
@@ -143,9 +167,58 @@ export default async function MoviePage({ params }: MoviePageProps) {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {settings.features.showCast && !isCustomId && cast.length > 0 && (
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold mb-6">Pemeran</h2>
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+              {cast.map((person) => (
+                <div key={person.id} className="flex-shrink-0 w-36 text-center">
+                  <div className="relative aspect-square w-full overflow-hidden rounded-full bg-zinc-800 mb-2">
+                    {person.profile_path ? (
+                      <Image
+                        src={`https://image.tmdb.org/t/p/w200${person.profile_path}`}
+                        alt={person.name}
+                        fill
+                        className="object-cover"
+                        sizes="144px"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-zinc-500 text-2xl">👤</div>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium text-white truncate">{person.name}</p>
+                  <p className="text-xs text-zinc-400 truncate">{person.character}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {settings.features.showTrailer && !isCustomId && movie.videos?.results?.length ? (
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold mb-6">Trailer</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {movie.videos.results
+                .filter((v: any) => v.type === "Trailer" && v.site === "YouTube")
+                .slice(0, 2)
+                .map((video: any) => (
+                  <div key={video.id} className="aspect-video w-full">
+                    <iframe
+                      src={`https://www.youtube.com/embed/${video.key}`}
+                      title={video.name}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full rounded-lg"
+                    />
+                  </div>
+                ))}
+            </div>
+          </section>
+        ) : null}
+
         <section className="mb-16">
           <h2 className="text-2xl font-bold mb-6">Putar Film</h2>
-          <VideoPlayer source={videoSource} title={title} />
+          <VideoProgress contentId={isCustomId ? customId || id : String(movie.id)} contentType="movie" source={videoSource} />
         </section>
 
         {!isCustomId && relatedFiltered.length > 0 && (

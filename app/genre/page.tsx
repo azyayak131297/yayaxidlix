@@ -1,4 +1,5 @@
 import { fetchGenres } from "@/lib/tmdb"
+import { loadGenres } from "@/lib/genres"
 import { Header } from "@/components/Header"
 import Link from "next/link"
 
@@ -9,8 +10,17 @@ const FILM_STRIP_PATTERN = {
 }
 
 async function getGenres() {
-  const genres = await fetchGenres()
-  return genres.sort((a, b) => a.name.localeCompare(b.name))
+  try {
+    const genres = await fetchGenres()
+    if (genres.length > 0) {
+      return genres.sort((a, b) => a.name.localeCompare(b.name))
+    }
+  } catch {
+    // fallback to local genres
+  }
+
+  const localGenres = loadGenres()
+  return localGenres.sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export default async function GenrePage() {
@@ -60,11 +70,15 @@ export default async function GenrePage() {
               <Link
                 key={genre.id}
                 href={`/genre/${genre.id}`}
-                className="group relative aspect-video w-full overflow-hidden rounded-xl bg-zinc-900 border border-zinc-800 transition-all duration-300 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/10 hover:-translate-y-0.5"
+                className="group relative aspect-video w-full overflow-hidden rounded-xl border border-zinc-800 transition-all duration-300 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/10 hover:-translate-y-0.5"
+                style={genre.imageUrl ? { backgroundImage: `url(${genre.imageUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                {!genre.imageUrl && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                 <div className="absolute inset-0 flex items-end p-4">
-                  <span className="text-sm font-semibold text-zinc-200 group-hover:text-red-400 transition-colors leading-tight">
+                  <span className="text-sm font-semibold text-zinc-100 group-hover:text-red-400 transition-colors leading-tight drop-shadow">
                     {genre.name}
                   </span>
                 </div>

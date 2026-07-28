@@ -13,6 +13,7 @@ model User {
   name          String?
   email         String?   @unique
   image         String?
+  password      String?
   watchlist     Watchlist[]
   createdAt     DateTime  @default(now())
 }
@@ -38,6 +39,18 @@ model CustomContent {
   genres          String?
   type            String // "movie" atau "tv"
   seasons         Int?
+  viewCount       Int      @default(0)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+}
+
+model VideoProgress {
+  id              String   @id @default(cuid())
+  userId          String
+  contentId       String
+  contentType     String // "movie" atau "tv"
+  episodeKey      String? // untuk series: "seriesId_s1e1"
+  progressSeconds Int      // posisi playback saat ini
+  durationSeconds Int      // total durasi video
+  updatedAt       DateTime @default(now())
 }

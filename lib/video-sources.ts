@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs"
+import { readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 
 export interface VideoSource {
@@ -25,6 +25,16 @@ let cachedSources: VideoSourcesData | null = null
 
 export function invalidateVideoSourcesCache() {
   cachedSources = null
+}
+
+export function saveVideoSources(data: VideoSourcesData) {
+  try {
+    writeFileSync(getVideoSourcesPath(), JSON.stringify(data, null, 2), "utf-8")
+    cachedSources = data
+    return true
+  } catch {
+    return false
+  }
 }
 
 function getVideoSourcesPath() {

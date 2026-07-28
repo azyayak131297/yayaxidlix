@@ -1,7 +1,9 @@
 import { fetchMovieDetails, fetchSeriesDetails, fetchTrending } from "@/lib/tmdb"
 import { prisma } from "@/lib/prisma"
 import { loadVideoSources, getVideoSource, getEpisodeVideoSource } from "@/lib/video-sources"
+import { getLocalContentById } from "@/lib/local-content"
 import { VideoPlayer } from "@/components/VideoPlayer"
+import { VideoProgress } from "@/components/VideoProgress"
 import { ContentRow } from "@/components/ContentRow"
 import { Header } from "@/components/Header"
 import Image from "next/image"
@@ -15,11 +17,18 @@ export const dynamic = "force-dynamic"
 
 async function fetchContent(type: string, id: string) {
   const isCustomId = id.startsWith("custom-")
+  const isLocalId = id.startsWith("local-")
 
   if (isCustomId) {
     const custom = await prisma.customContent.findUnique({ where: { id } })
     if (!custom) return null
     return { ...custom, isCustom: true, mediaType: custom.type }
+  }
+
+  if (isLocalId) {
+    const local = getLocalContentById(id)
+    if (!local) return null
+    return { ...local, isCustom: true, mediaType: local.type }
   }
 
   if (type === "movie") {
@@ -158,7 +167,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6">▶ Putar Sekarang</h2>
           <div className="rounded-lg overflow-hidden bg-zinc-900 border border-zinc-800">
-            <VideoPlayer source={videoSource} title={title} />
+            <VideoProgress contentId={id} contentType={type as "movie" | "tv"} episodeKey={isSeries ? `${id}_s1e1` : undefined} source={videoSource} />
           </div>
         </section>
 

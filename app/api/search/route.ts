@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { searchTmdb } from "@/lib/tmdb"
+import { loadLocalContent } from "@/lib/local-content"
 
 export const dynamic = "force-dynamic"
 
@@ -26,7 +27,7 @@ export async function GET(request: Request) {
   const results: SearchResult[] = []
 
   try {
-    const [tmdbResults, customResults] = await Promise.all([
+    const [tmdbResults, customResults, localResults] = await Promise.all([
       searchTmdb(query),
       prisma.customContent.findMany({
         where: {
@@ -36,6 +37,7 @@ export async function GET(request: Request) {
         },
         orderBy: { createdAt: "desc" },
       }),
+      Promise.resolve(loadLocalContent()),
     ])
 
     for (const item of tmdbResults) {
@@ -62,6 +64,21 @@ export async function GET(request: Request) {
         source: "custom",
         overview: item.overview,
       })
+    }
+
+    for (const item of localResults) {
+      if (item.title.toLowerCase().includes(query.toLowerCase())) {
+        results.push({
+          id: item.id,
+          title: item.title,
+          posterPath: item.posterPath,
+          backdropPath: item.backdropPath,
+          releaseYear: item.releaseYear,
+          type: item.type as "movie" | "tv",
+          source: "custom",
+          overview: item.overview,
+        })
+      }
     }
 
     return NextResponse.json({ data: results })

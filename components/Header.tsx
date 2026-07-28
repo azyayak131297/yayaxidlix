@@ -3,11 +3,50 @@
 import { useState, FormEvent } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useSession, signOut } from "next-auth/react"
+import { useSiteSettings } from "@/components/SiteSettingsProvider"
 
-export function Header() {
+type SiteSettings = {
+  site: {
+    title: string
+    description: string
+    accentColor: string
+    logoText: string
+  }
+  features: {
+    showTmdb: boolean
+    showLocal: boolean
+    showTrailer: boolean
+    showCast: boolean
+  }
+}
+
+type HeaderProps = {
+  settings?: SiteSettings
+}
+
+const defaultSettings: SiteSettings = {
+  site: {
+    title: "IDLIX",
+    description: "Platform streaming pribadi",
+    accentColor: "#dc2626",
+    logoText: "IDLIX",
+  },
+  features: {
+    showTmdb: true,
+    showLocal: true,
+    showTrailer: true,
+    showCast: true,
+  },
+}
+
+export function Header({ settings: settingsProp }: HeaderProps = {}) {
   const router = useRouter()
   const [query, setQuery] = useState("")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { data: session, status } = useSession()
+  const context = useSiteSettings()
+  const settings = settingsProp || context.settings
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -19,6 +58,7 @@ export function Header() {
 
   const navLinks = [
     { href: "/", label: "Beranda" },
+    ...(settings.features.showLocal ? [{ href: "/local", label: "Lokal" }] : []),
     { href: "/genre", label: "Genre" },
     { href: "/country", label: "Negara" },
     { href: "/year", label: "Tahun" },
@@ -38,8 +78,8 @@ export function Header() {
         Skip to content
       </a>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        <Link href="/" className="text-xl font-bold text-red-500 flex-shrink-0" aria-label="IDLIX Home">
-          IDLIX
+        <Link href="/" className="text-xl font-bold text-red-500 flex-shrink-0" aria-label="IDLIX Home" style={{ color: settings.site.accentColor }}>
+          {settings.site.logoText}
         </Link>
 
         <form onSubmit={handleSubmit} className="flex-1 max-w-xl hidden sm:block">
@@ -89,9 +129,24 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Link href="/login" className="text-sm text-zinc-300 hover:text-white transition-colors hidden sm:inline-block">
-            Login
-          </Link>
+          {status === "loading" ? null : session?.user ? (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-zinc-300 hidden sm:inline-block">
+                {session.user.name || session.user.email}
+              </span>
+              <button
+                type="button"
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="text-sm text-zinc-300 hover:text-white transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <Link href="/login" className="text-sm text-zinc-300 hover:text-white transition-colors hidden sm:inline-block">
+              Login
+            </Link>
+          )}
         </div>
       </div>
 
@@ -124,7 +179,20 @@ export function Header() {
             ) : (
               <Link key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)} className="text-zinc-300 hover:text-white text-sm py-1">{link.label}</Link>
             )))}
-            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-zinc-300 hover:text-white text-sm py-1">Login</Link>
+            {status === "loading" ? null : session?.user ? (
+              <>
+                <span className="text-zinc-300 text-sm py-1">{session.user.name || session.user.email}</span>
+                <button
+                  type="button"
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="text-zinc-300 hover:text-white text-sm py-1 text-left"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-zinc-300 hover:text-white text-sm py-1">Login</Link>
+            )}
           </nav>
         </div>
       )}

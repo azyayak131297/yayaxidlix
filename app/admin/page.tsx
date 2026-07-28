@@ -1,9 +1,13 @@
 "use client"
 
 import type { FormEvent } from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+import Link from "next/link"
 import { Header } from "@/components/Header"
+
+export const dynamic = "force-dynamic"
 
 type ContentFormData = {
   title: string
@@ -25,9 +29,14 @@ type VideoFormData = {
   quality: string
 }
 
-type UnifiedFormData = ContentFormData & {
-  video: VideoFormData
+type NetworkFormData = {
+  networkId: string
+  networkName: string
+  backdropUrl: string
+  color: string
 }
+
+type SubmitState = "idle" | "submitting" | "success" | "error"
 
 const emptyContent: ContentFormData = {
   title: "",
@@ -49,696 +58,504 @@ const emptyVideo: VideoFormData = {
   quality: "",
 }
 
-type SubmitState = "idle" | "submitting" | "success" | "error"
-type Result = { contentId?: string; videoKey?: string; error?: string }
-type ActiveTab = "unified" | "legacy" | "networks"
+const emptyNetwork: NetworkFormData = {
+  networkId: "",
+  networkName: "",
+  backdropUrl: "",
+  color: "#1a1a2e",
+}
+
+type Tab = "quick" | "content" | "video" | "network" | "manage"
 
 export default function AdminPage() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<ActiveTab>("unified")
-  const [form, setForm] = useState<UnifiedFormData>({
-    ...emptyContent,
-    video: { ...emptyVideo },
-  })
-  const [submitState, setSubmitState] = useState<SubmitState>("idle")
-  const [result, setResult] = useState<Result>({})
-  const [message, setMessage] = useState<string | null>(null)
-  const [networkForm, setNetworkForm] = useState({
-    networkId: "",
-    networkName: "",
-    backdropUrl: "",
-    color: "#1a1a2e",
-  })
+  const { data: session, status } = useSession()
+  const [activeTab, setActiveTab] = useState<Tab>("quick")
+
+  const [contentForm, setContentForm] = useState<ContentFormData>({ ...emptyContent })
+  const [videoForm, setVideoForm] = useState<VideoFormData>({ ...emptyVideo })
+  const [networkForm, setNetworkForm] = useState<NetworkFormData>({ ...emptyNetwork })
+  const [selectedGenres, setSelectedGenres] = useState<number[]>([])
+  const [allGenres, setAllGenres] = useState<{ id: number; name: string }[]>([])
+  const [showGenreGrid, setShowGenreGrid] = useState(false)
+
+  const [contentState, setContentState] = useState<SubmitState>("idle")
+  const [videoState, setVideoState] = useState<SubmitState>("idle")
   const [networkState, setNetworkState] = useState<SubmitState>("idle")
-  const [networkMessage, setNetworkMessage] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
 
-  const handleContentChange = (field: keyof ContentFormData, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handleVideoChange = (field: keyof VideoFormData, value: string) => {
-    setForm((prev) => ({ ...prev, video: { ...prev.video, [field]: value } }))
-  }
-
-  const generateContentId = () => {
-    const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
-    let id = "custom-"
-    for (let i = 0; i < 12; i++) {
-      id += chars.charAt(Math.floor(Math.random() * chars.length))
+  useEffect(() => {
+    if (status === "loading") return
+    if (!session?.user) {
+      router.replace("/login")
     }
-    return id
+  }, [session, status, router])
+
+  useEffect(() => {
+    const loadGenres = async () => {
+      try {
+        const res = await fetch("/api/genres")
+        const json = await res.json()
+        if (json.data) {
+          setAllGenres(json.data)
+        }
+      } catch {
+        // use empty fallback
+      }
+    }
+    loadGenres()
+  }, [])
+
+  if (status === "loading" || !session?.user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="text-zinc-400">Memuat...</div>
+      </div>
+    )
   }
 
-  const handleUnifiedSubmit = async (e: FormEvent) => {
+  const toggleGenre = (id: number) => {
+    setSelectedGenres((prev) => {
+      const next = prev.includes(id) ? prev.filter((gid) => gid !== id) : [...prev, id]
+      const names = next.map((gid) => allGenres.find((g) => g.id === gid)?.name || "").filter(Boolean)
+      setContentForm((f) => ({ ...f, genres: names.join(", ") }))
+      return next
+    })
+  }
+
+  const handleContentSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setSubmitState("submitting")
+    setContentState("submitting")
     setMessage(null)
-    setResult({})
 
     try {
-      const contentId = generateContentId()
-
-      const contentBody = {
-        title: form.title,
-        overview: form.overview || null,
-        posterPath: form.posterPath || null,
-        backdropPath: form.backdropPath || null,
-        releaseYear: form.releaseYear ? Number(form.releaseYear) : null,
-        rating: form.rating ? Number(form.rating) : null,
-        durationMinutes: form.durationMinutes ? Number(form.durationMinutes) : null,
-        genres: form.genres || null,
-        type: form.type,
-        seasons: form.type === "tv" && form.seasons ? Number(form.seasons) : null,
-      }
-
-      const contentRes = await fetch("/api/admin/content", {
+      const res = await fetch("/api/admin/content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(contentBody),
+        body: JSON.stringify({
+          title: contentForm.title,
+          overview: contentForm.overview || null,
+          posterPath: contentForm.posterPath || null,
+          backdropPath: contentForm.backdropPath || null,
+          releaseYear: contentForm.releaseYear ? Number(contentForm.releaseYear) : null,
+          rating: contentForm.rating ? Number(contentForm.rating) : null,
+          durationMinutes: contentForm.durationMinutes ? Number(contentForm.durationMinutes) : null,
+          genres: contentForm.genres || null,
+          type: contentForm.type,
+          seasons: contentForm.type === "tv" && contentForm.seasons ? Number(contentForm.seasons) : null,
+        }),
       })
 
-      if (!contentRes.ok) {
-        const text = await contentRes.text()
-        throw new Error(`Gagal menyimpan konten: ${text}`)
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(text || "Gagal menyimpan konten")
       }
 
-      const contentJson = await contentRes.json()
-      const usedContentId = contentJson.id || contentId
+      const data = await res.json()
+      setContentState("success")
+      setMessage(`✅ Konten berhasil disimpan dengan ID: ${data.id}`)
+      setContentForm({ ...emptyContent })
+      setSelectedGenres([])
+    } catch (err) {
+      setContentState("error")
+      setMessage(err instanceof Error ? err.message : "Terjadi kesalahan")
+    } finally {
+      setContentState("idle")
+    }
+  }
 
-      const videoKey = `custom-${usedContentId}`
+  const handleVideoSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setVideoState("submitting")
+    setMessage(null)
 
-      const videoRes = await fetch("/api/admin/video-sources", {
+    try {
+      const key = `custom-${contentForm.title.toLowerCase().replace(/\s+/g, "-") || "video"}`
+      const res = await fetch("/api/admin/video-sources", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "upsert",
-          key: videoKey,
+          key,
           contentType: "custom",
           source: {
-            type: form.video.type,
-            url: form.video.url.trim(),
-            label: form.video.label.trim() || undefined,
-            quality: form.video.quality.trim() || undefined,
+            type: videoForm.type,
+            url: videoForm.url.trim(),
+            label: videoForm.label.trim() || undefined,
+            quality: videoForm.quality.trim() || undefined,
           },
         }),
       })
 
-      if (!videoRes.ok) {
-        const text = await videoRes.text()
-        throw new Error(`Konten tersimpan tapi gagal menyimpan video source: ${text}`)
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(text || "Gagal menyimpan video source")
       }
 
-      setSubmitState("success")
-      setResult({ contentId: usedContentId, videoKey })
-      setMessage(`✅ Konten dan video source berhasil disimpan!`)
-
-      setForm({
-        ...emptyContent,
-        video: { ...emptyVideo },
-      })
+      setVideoState("success")
+      setMessage(`✅ Video source berhasil disimpan dengan key: ${key}`)
+      setVideoForm({ ...emptyVideo })
     } catch (err) {
-      setSubmitState("error")
-      setMessage(err instanceof Error ? err.message : "Terjadi kesalahan yang tidak diketahui")
+      setVideoState("error")
+      setMessage(err instanceof Error ? err.message : "Terjadi kesalahan")
     } finally {
-      setSubmitState("idle")
+      setVideoState("idle")
     }
   }
 
-  const sourceTypeOptions = [
-    { value: "archive", label: "📦 Archive.org" },
-    { value: "youtube", label: "▶ YouTube" },
-    { value: "vimeo", label: "🎬 Vimeo" },
-    { value: "direct", label: "🔗 Direct URL" },
+  const handleNetworkSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setNetworkState("submitting")
+    setMessage(null)
+
+    try {
+      const res = await fetch("/api/admin/network-backdrops", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "upsert",
+          networkId: networkForm.networkId,
+          backdrop: {
+            network: networkForm.networkName,
+            backdropUrl: networkForm.backdropUrl,
+            color: networkForm.color,
+          },
+        }),
+      })
+
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(text || "Gagal menyimpan network backdrop")
+      }
+
+      setNetworkState("success")
+      setMessage("✅ Network backdrop berhasil disimpan!")
+      setNetworkForm({ ...emptyNetwork })
+    } catch (err) {
+      setNetworkState("error")
+      setMessage(err instanceof Error ? err.message : "Terjadi kesalahan")
+    } finally {
+      setNetworkState("idle")
+    }
+  }
+
+  const tabs: { id: Tab; label: string; icon: string }[] = [
+    { id: "quick", label: "Tambah Cepat", icon: "🚀" },
+    { id: "content", label: "Konten", icon: "📝" },
+    { id: "video", label: "Video", icon: "🎬" },
+    { id: "network", label: "Network", icon: "📺" },
+    { id: "manage", label: "Kelola", icon: "⚙️" },
   ]
 
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="flex gap-4 mb-8 border-b border-zinc-800">
-          <button
-            type="button"
-            onClick={() => setActiveTab("unified")}
-            className={`pb-3 text-sm font-medium transition-colors ${
-              activeTab === "unified"
-                ? "text-red-400 border-b-2 border-red-400"
-                : "text-zinc-400 hover:text-white"
-            }`}
-          >
-            🚀 Tambah Cepat (Konten + Video)
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("legacy")}
-            className={`pb-3 text-sm font-medium transition-colors ${
-              activeTab === "legacy"
-                ? "text-red-400 border-b-2 border-red-400"
-                : "text-zinc-400 hover:text-white"
-            }`}
-          >
-            ⚙️ Form Lengkap (Split)
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("networks")}
-            className={`pb-3 text-sm font-medium transition-colors ${
-              activeTab === "networks"
-                ? "text-red-400 border-b-2 border-red-400"
-                : "text-zinc-400 hover:text-white"
-            }`}
-          >
-            📺 Jaringan Backdrops
-          </button>
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Admin Panel</h1>
+            <p className="text-zinc-400 mt-1">Kelola konten, video, dan pengaturan situs.</p>
+          </div>
         </div>
 
-        {activeTab === "unified" ? (
-          <section>
-            <h1 className="text-2xl font-bold mb-2">Tambah Konten & Video Sekaligus</h1>
-            <p className="text-zinc-400 text-sm mb-6">
-              Isi semua data di bawah ini. Konten dan video source akan disimpan dalam satu klik.
-              Setelah submit, konten langsung aktif dan bisa ditonton.
-            </p>
+        <div className="flex gap-1 mb-8 overflow-x-auto pb-2 border-b border-zinc-800">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`whitespace-nowrap px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+                activeTab === tab.id
+                  ? "bg-zinc-900 text-red-400 border-b-2 border-red-400"
+                  : "text-zinc-400 hover:text-white hover:bg-zinc-900/50"
+              }`}
+            >
+              {tab.icon} {tab.label}
+            </button>
+          ))}
+        </div>
 
-            <form onSubmit={handleUnifiedSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Tipe Konten</label>
-                  <select
-                    value={form.type}
-                    onChange={(e) => handleContentChange("type", e.target.value)}
-                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                  >
-                    <option value="movie">🎬 Movie</option>
-                    <option value="tv">📺 TV Series</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Judul *</label>
-                  <input
-                    required
-                    value={form.title}
-                    onChange={(e) => handleContentChange("title", e.target.value)}
-                    placeholder="Contoh: Avengers: Endgame"
-                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                  />
-                </div>
-              </div>
+        {message && (
+          <div
+            className={`mb-6 p-4 rounded-lg border ${
+              message.startsWith("✅")
+                ? "bg-green-900/30 border-green-700 text-green-300"
+                : "bg-red-900/30 border-red-700 text-red-300"
+            }`}
+          >
+            <p className="whitespace-pre-wrap text-sm">{message}</p>
+          </div>
+        )}
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Sinopsis</label>
-                <textarea
-                  value={form.overview}
-                  onChange={(e) => handleContentChange("overview", e.target.value)}
-                  rows={3}
-                  placeholder="Deskripsi singkat konten..."
-                  className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">URL Poster</label>
-                  <input
-                    value={form.posterPath}
-                    onChange={(e) => handleContentChange("posterPath", e.target.value)}
-                    placeholder="https://..."
-                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">URL Backdrop</label>
-                  <input
-                    value={form.backdropPath}
-                    onChange={(e) => handleContentChange("backdropPath", e.target.value)}
-                    placeholder="https://..."
-                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Tahun Rilis</label>
-                  <input
-                    value={form.releaseYear}
-                    onChange={(e) => handleContentChange("releaseYear", e.target.value)}
-                    placeholder="2025"
-                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Rating</label>
-                  <input
-                    value={form.rating}
-                    onChange={(e) => handleContentChange("rating", e.target.value)}
-                    placeholder="7.5"
-                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Durasi (menit)</label>
-                  <input
-                    value={form.durationMinutes}
-                    onChange={(e) => handleContentChange("durationMinutes", e.target.value)}
-                    placeholder="90"
-                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Genre (pisah dengan koma)</label>
-                <input
-                  value={form.genres}
-                  onChange={(e) => handleContentChange("genres", e.target.value)}
-                  placeholder="Action, Drama, Sci-Fi"
-                  className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                />
-              </div>
-
-              {form.type === "tv" && (
-                <div>
-                  <label className="block text-sm font-medium mb-1">Jumlah Musim</label>
-                  <input
-                    value={form.seasons}
-                    onChange={(e) => handleContentChange("seasons", e.target.value)}
-                    placeholder="1"
-                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                  />
-                </div>
-              )}
-
-              <hr className="border-zinc-800 my-4" />
-              <h2 className="text-xl font-bold mb-4">🎬 Sumber Video</h2>
-              <p className="text-zinc-400 text-sm mb-4">
-                Video source akan otomatis terhubung ke konten yang baru dibuat. ID konten akan
-                tampil setelah submit pertama.
+        {activeTab === "quick" && (
+          <section className="space-y-6">
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+              <h2 className="text-xl font-bold mb-1">Tambah Konten & Video Sekaligus</h2>
+              <p className="text-zinc-400 text-sm mb-6">
+                Isi data konten dan video source dalam satu form. Setelah submit, konten langsung aktif.
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Tipe Sumber Video</label>
-                  <select
-                    value={form.video.type}
-                    onChange={(e) => handleVideoChange("type", e.target.value)}
-                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                  >
-                    {sourceTypeOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">URL Video *</label>
-                  <input
-                    required
-                    value={form.video.url}
-                    onChange={(e) => handleVideoChange("url", e.target.value)}
-                    placeholder="https://youtube.com/watch?v=..."
-                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Label (opsional)</label>
-                  <input
-                    value={form.video.label}
-                    onChange={(e) => handleVideoChange("label", e.target.value)}
-                    placeholder="YouTube, Archive, dll"
-                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Kualitas (opsional)</label>
-                  <input
-                    value={form.video.quality}
-                    onChange={(e) => handleVideoChange("quality", e.target.value)}
-                    placeholder="720p, 1080p"
-                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={submitState === "submitting"}
-                className="w-full rounded bg-red-600 px-4 py-3 text-sm font-bold hover:bg-red-500 disabled:opacity-60 transition-colors"
-              >
-                {submitState === "submitting"
-                  ? "⏳ Menyimpan konten & video source..."
-                  : "🚀 Submit Konten & Video Sekaligus"}
-              </button>
-            </form>
-
-            {message && (
-              <div
-                className={`mt-6 p-4 rounded-lg border ${
-                  submitState === "success"
-                    ? "bg-green-900/30 border-green-700 text-green-300"
-                    : submitState === "error"
-                      ? "bg-red-900/30 border-red-700 text-red-300"
-                      : "bg-zinc-900 border-zinc-700 text-zinc-300"
-                }`}
-              >
-                <p className="whitespace-pre-wrap">{message}</p>
-
-                {submitState === "success" && result.contentId && (
-                  <div className="mt-4 space-y-2">
-                    <p className="text-sm font-semibold text-green-400">✅ Berhasil disimpan!</p>
-                    <p className="text-xs text-zinc-400">
-                      Konten ID: <code className="text-zinc-300">{result.contentId}</code>
-                    </p>
-                    <p className="text-xs text-zinc-400">
-                      Video Key: <code className="text-zinc-300">{result.videoKey}</code>
-                    </p>
-                    <a
-                      href={`/watch/${form.type}/${result.contentId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block mt-2 text-red-400 hover:text-red-300 text-sm font-medium"
-                    >
-                      👉 Lihat konten di halaman Tonton →
-                    </a>
-                  </div>
-                )}
-              </div>
-            )}
-          </section>
-        ) : (
-          <section>
-            <h1 className="text-2xl font-bold mb-2">Form Lengkap (Split Tab)</h1>
-            <p className="text-zinc-400 text-sm mb-6">
-              Gunakan tab ini jika ingin mengelola konten dan video source secara terpisah.
-            </p>
-
-            <div className="flex gap-4 mb-8 border-b border-zinc-800">
-              <button
-                type="button"
-                onClick={() => setActiveTab("unified")}
-                className="pb-3 text-sm font-medium text-zinc-400 hover:text-white transition-colors border-b-2 border-transparent"
-              >
-                🚀 Tambah Cepat
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("legacy")}
-                className="pb-3 text-sm font-medium text-red-400 border-b-2 border-red-400"
-              >
-                ⚙️ Form Lengkap
-              </button>
-            </div>
-
-            <div className="space-y-8">
-              <section>
-                <h2 className="text-xl font-bold mb-4">📝 Konten Manual</h2>
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault()
-                    setSubmitState("submitting")
-                    setMessage(null)
-                    try {
-                      const res = await fetch("/api/admin/content", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          title: form.title,
-                          overview: form.overview || null,
-                          posterPath: form.posterPath || null,
-                          backdropPath: form.backdropPath || null,
-                          releaseYear: form.releaseYear ? Number(form.releaseYear) : null,
-                          rating: form.rating ? Number(form.rating) : null,
-                          durationMinutes: form.durationMinutes ? Number(form.durationMinutes) : null,
-                          genres: form.genres || null,
-                          type: form.type,
-                          seasons: form.type === "tv" && form.seasons ? Number(form.seasons) : null,
-                        }),
-                      })
-                      if (!res.ok) {
-                        const text = await res.text()
-                        throw new Error(text || "Gagal menyimpan konten")
-                      }
-                      const data = await res.json()
-                      setResult({ contentId: data.id })
-                      setMessage(`✅ Konten berhasil disimpan dengan ID: ${data.id}`)
-                      setForm({ ...emptyContent, video: form.video })
-                    } catch (err) {
-                      setMessage(err instanceof Error ? err.message : "Terjadi kesalahan")
-                    } finally {
-                      setSubmitState("idle")
-                    }
-                  }}
-                  className="space-y-4"
-                >
+              <form onSubmit={handleContentSubmit} className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Tipe</label>
+                    <label className="block text-sm font-medium mb-1">Tipe Konten</label>
                     <select
-                      value={form.type}
-                      onChange={(e) => handleContentChange("type", e.target.value)}
+                      value={contentForm.type}
+                      onChange={(e) => setContentForm((f) => ({ ...f, type: e.target.value as "movie" | "tv" }))}
                       className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
                     >
-                      <option value="movie">Movie</option>
-                      <option value="tv">TV Series</option>
+                      <option value="movie">🎬 Movie</option>
+                      <option value="tv">📺 TV Series</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Judul *</label>
                     <input
                       required
-                      value={form.title}
-                      onChange={(e) => handleContentChange("title", e.target.value)}
+                      value={contentForm.title}
+                      onChange={(e) => setContentForm((f) => ({ ...f, title: e.target.value }))}
+                      placeholder="Contoh: Avengers: Endgame"
                       className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Sinopsis</label>
+                  <textarea
+                    value={contentForm.overview}
+                    onChange={(e) => setContentForm((f) => ({ ...f, overview: e.target.value }))}
+                    rows={3}
+                    placeholder="Deskripsi singkat konten..."
+                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Sinopsis</label>
-                    <textarea
-                      value={form.overview}
-                      onChange={(e) => handleContentChange("overview", e.target.value)}
-                      rows={3}
-                      className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">URL Poster</label>
-                      <input
-                        value={form.posterPath}
-                        onChange={(e) => handleContentChange("posterPath", e.target.value)}
-                        placeholder="https://..."
-                        className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">URL Backdrop</label>
-                      <input
-                        value={form.backdropPath}
-                        onChange={(e) => handleContentChange("backdropPath", e.target.value)}
-                        placeholder="https://..."
-                        className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Tahun Rilis</label>
-                      <input
-                        value={form.releaseYear}
-                        onChange={(e) => handleContentChange("releaseYear", e.target.value)}
-                        placeholder="2025"
-                        className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Rating</label>
-                      <input
-                        value={form.rating}
-                        onChange={(e) => handleContentChange("rating", e.target.value)}
-                        placeholder="7.5"
-                        className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Durasi (menit)</label>
-                      <input
-                        value={form.durationMinutes}
-                        onChange={(e) => handleContentChange("durationMinutes", e.target.value)}
-                        placeholder="90"
-                        className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Genre (pisah koma)</label>
+                    <label className="block text-sm font-medium mb-1">URL Poster</label>
                     <input
-                      value={form.genres}
-                      onChange={(e) => handleContentChange("genres", e.target.value)}
-                      placeholder="Action, Drama"
+                      value={contentForm.posterPath}
+                      onChange={(e) => setContentForm((f) => ({ ...f, posterPath: e.target.value }))}
+                      placeholder="https://..."
                       className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
                     />
                   </div>
-                  {form.type === "tv" && (
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Jumlah Musim</label>
-                      <input
-                        value={form.seasons}
-                        onChange={(e) => handleContentChange("seasons", e.target.value)}
-                        placeholder="1"
-                        className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
-                      />
+                  <div>
+                    <label className="block text-sm font-medium mb-1">URL Backdrop</label>
+                    <input
+                      value={contentForm.backdropPath}
+                      onChange={(e) => setContentForm((f) => ({ ...f, backdropPath: e.target.value }))}
+                      placeholder="https://..."
+                      className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Tahun Rilis</label>
+                    <input
+                      value={contentForm.releaseYear}
+                      onChange={(e) => setContentForm((f) => ({ ...f, releaseYear: e.target.value }))}
+                      placeholder="2025"
+                      className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Rating</label>
+                    <input
+                      value={contentForm.rating}
+                      onChange={(e) => setContentForm((f) => ({ ...f, rating: e.target.value }))}
+                      placeholder="7.5"
+                      className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Durasi (menit)</label>
+                    <input
+                      value={contentForm.durationMinutes}
+                      onChange={(e) => setContentForm((f) => ({ ...f, durationMinutes: e.target.value }))}
+                      placeholder="90"
+                      className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium">Genre</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowGenreGrid(!showGenreGrid)}
+                      className="text-xs text-red-400 hover:text-red-300"
+                    >
+                      {showGenreGrid ? "Sembunyikan genre" : "Pilih genre"}
+                    </button>
+                  </div>
+
+                  {showGenreGrid && (
+                    <div className="mb-3 p-3 rounded-lg border border-zinc-700 bg-zinc-950">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                        {allGenres.map((genre) => (
+                          <label
+                            key={genre.id}
+                            className={`flex items-center gap-2 rounded border px-3 py-2 cursor-pointer transition-colors ${
+                              selectedGenres.includes(genre.id)
+                                ? "border-red-500 bg-red-900/20"
+                                : "border-zinc-700 bg-zinc-900 hover:border-zinc-500"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedGenres.includes(genre.id)}
+                              onChange={() => toggleGenre(genre.id)}
+                              className="h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-red-600 focus:ring-red-500"
+                            />
+                            <span className="text-xs text-zinc-200">{genre.name}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   )}
-                  <button
-                    type="submit"
-                    disabled={submitState === "submitting"}
-                    className="rounded bg-red-600 px-4 py-2 text-sm font-medium hover:bg-red-500 disabled:opacity-60"
-                  >
-                    {submitState === "submitting" ? "Menyimpan..." : "Simpan Konten"}
-                  </button>
-                </form>
-              </section>
 
-              <section>
-                <h2 className="text-xl font-bold mb-4">🎬 Sumber Video</h2>
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault()
-                    setSubmitState("submitting")
-                    setMessage(null)
-                    try {
-                      const key = `custom-${result.contentId || form.title.toLowerCase().replace(/\s+/g, "-")}`
-                      const res = await fetch("/api/admin/video-sources", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          action: "upsert",
-                          key,
-                          contentType: "custom",
-                          source: {
-                            type: form.video.type,
-                            url: form.video.url.trim(),
-                            label: form.video.label.trim() || undefined,
-                            quality: form.video.quality.trim() || undefined,
-                          },
-                        }),
-                      })
-                      if (!res.ok) {
-                        const text = await res.text()
-                        throw new Error(text || "Gagal menyimpan video source")
-                      }
-                      setResult((prev) => ({ ...prev, videoKey: key }))
-                      setMessage(`✅ Video source berhasil disimpan dengan key: ${key}`)
-                      setForm({ ...emptyContent, video: emptyVideo })
-                    } catch (err) {
-                      setMessage(err instanceof Error ? err.message : "Terjadi kesalahan")
-                    } finally {
-                      setSubmitState("idle")
-                    }
-                  }}
-                  className="space-y-4"
-                >
+                  <input
+                    value={contentForm.genres}
+                    onChange={(e) => {
+                      setContentForm((f) => ({ ...f, genres: e.target.value }))
+                      const ids = e.target.value
+                        .split(",")
+                        .map((g) => g.trim().toLowerCase())
+                        .filter(Boolean)
+                        .map((name) => allGenres.find((g) => g.name.toLowerCase() === name)?.id || 0)
+                        .filter((id): id is number => id > 0)
+                      setSelectedGenres(ids)
+                    }}
+                    placeholder="Action, Drama, Sci-Fi"
+                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
+                  />
+                </div>
+
+                {contentForm.type === "tv" && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Jumlah Musim</label>
+                    <input
+                      value={contentForm.seasons}
+                      onChange={(e) => setContentForm((f) => ({ ...f, seasons: e.target.value }))}
+                      placeholder="1"
+                      className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
+                    />
+                  </div>
+                )}
+
+                <hr className="border-zinc-800 my-6" />
+
+                <div>
+                  <h3 className="text-lg font-bold mb-4">🎬 Sumber Video</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Tipe Sumber</label>
+                      <label className="block text-sm font-medium mb-1">Tipe Sumber Video</label>
                       <select
-                        value={form.video.type}
-                        onChange={(e) => handleVideoChange("type", e.target.value)}
+                        value={videoForm.type}
+                        onChange={(e) => setVideoForm((f) => ({ ...f, type: e.target.value as VideoFormData["type"] }))}
                         className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
                       >
-                        {sourceTypeOptions.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
+                        <option value="youtube">▶ YouTube</option>
+                        <option value="archive">📦 Archive.org</option>
+                        <option value="vimeo">🎬 Vimeo</option>
+                        <option value="direct">🔗 Direct URL</option>
                       </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">URL Video *</label>
                       <input
                         required
-                        value={form.video.url}
-                        onChange={(e) => handleVideoChange("url", e.target.value)}
-                        placeholder="https://..."
+                        value={videoForm.url}
+                        onChange={(e) => setVideoForm((f) => ({ ...f, url: e.target.value }))}
+                        placeholder="https://youtube.com/watch?v=..."
                         className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">Label (opsional)</label>
                       <input
-                        value={form.video.label}
-                        onChange={(e) => handleVideoChange("label", e.target.value)}
-                        placeholder="YouTube"
+                        value={videoForm.label}
+                        onChange={(e) => setVideoForm((f) => ({ ...f, label: e.target.value }))}
+                        placeholder="YouTube, Archive, dll"
                         className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Kualitas (opsional)</label>
                       <input
-                        value={form.video.quality}
-                        onChange={(e) => handleVideoChange("quality", e.target.value)}
-                        placeholder="720p"
+                        value={videoForm.quality}
+                        onChange={(e) => setVideoForm((f) => ({ ...f, quality: e.target.value }))}
+                        placeholder="720p, 1080p"
                         className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm"
                       />
                     </div>
                   </div>
-                  <button
-                    type="submit"
-                    disabled={submitState === "submitting"}
-                    className="rounded bg-red-600 px-4 py-2 text-sm font-medium hover:bg-red-500 disabled:opacity-60"
-                  >
-                    {submitState === "submitting" ? "Menyimpan..." : "Simpan Video Source"}
-                  </button>
-                </form>
-              </section>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={contentState === "submitting"}
+                  className="w-full rounded bg-red-600 px-4 py-3 text-sm font-bold hover:bg-red-500 disabled:opacity-60 transition-colors"
+                >
+                  {contentState === "submitting" ? "⏳ Menyimpan..." : "🚀 Simpan Konten & Video"}
+                </button>
+              </form>
             </div>
           </section>
         )}
-        {activeTab === "networks" && (
-          <section>
-            <h1 className="text-2xl font-bold mb-2">📺 Jaringan Backdrops</h1>
-            <p className="text-zinc-400 text-sm mb-6">
-              Atur backdrop dan warna untuk setiap jaringan yang ditampilkan di halaman Jaringan.
-            </p>
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault()
-                setNetworkState("submitting")
-                setNetworkMessage(null)
-                try {
-                  const networkId = networkForm.networkId
-                  const res = await fetch("/api/admin/network-backdrops", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      action: "upsert",
-                      networkId,
-                      backdrop: {
-                        network: networkForm.networkName,
-                        backdropUrl: networkForm.backdropUrl,
-                        color: networkForm.color,
-                      },
-                    }),
-                  })
-                  if (!res.ok) {
-                    const text = await res.text()
-                    throw new Error(text || "Gagal menyimpan network backdrop")
-                  }
-                  setNetworkMessage("✅ Network backdrop berhasil disimpan!")
-                  setNetworkForm({ networkId: "", networkName: "", backdropUrl: "", color: "#1a1a2e" })
-                } catch (err) {
-                  setNetworkMessage(err instanceof Error ? err.message : "Terjadi kesalahan")
-                } finally {
-                  setNetworkState("idle")
-                }
-              }}
-              className="space-y-4 bg-zinc-900/50 border border-zinc-800 rounded-xl p-6"
-            >
+
+        {activeTab === "content" && (
+          <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+            <h2 className="text-xl font-bold mb-4">📝 Kelola Konten</h2>
+            <p className="text-zinc-400 text-sm mb-6">Tambah, edit, atau hapus konten yang sudah ada.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Link href="/admin/content" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
+                <h3 className="font-semibold text-white mb-1">Konten Custom</h3>
+                <p className="text-xs text-zinc-400">Kelola konten custom.</p>
+              </Link>
+              <Link href="/admin/local" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
+                <h3 className="font-semibold text-white mb-1">Konten Lokal</h3>
+                <p className="text-xs text-zinc-400">Kelola konten dari file lokal.</p>
+              </Link>
+              <Link href="/admin/import" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
+                <h3 className="font-semibold text-white mb-1">Import Konten</h3>
+                <p className="text-xs text-zinc-400">Import banyak konten sekaligus.</p>
+              </Link>
+            </div>
+          </section>
+        )}
+
+        {activeTab === "video" && (
+          <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+            <h2 className="text-xl font-bold mb-4">🎬 Kelola Video</h2>
+            <p className="text-zinc-400 text-sm mb-6">Tambah atau ubah sumber video untuk konten.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Link href="/admin/videos" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
+                <h3 className="font-semibold text-white mb-1">Video Source</h3>
+                <p className="text-xs text-zinc-400">Kelola video movie/custom.</p>
+              </Link>
+              <Link href="/admin/videos/episodes" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
+                <h3 className="font-semibold text-white mb-1">Episode Series</h3>
+                <p className="text-xs text-zinc-400">Kelola video episode series.</p>
+              </Link>
+            </div>
+          </section>
+        )}
+
+        {activeTab === "network" && (
+          <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+            <h2 className="text-xl font-bold mb-4">📺 Jaringan Backdrops</h2>
+            <p className="text-zinc-400 text-sm mb-6">Atur backdrop dan warna untuk setiap jaringan.</p>
+            <form onSubmit={handleNetworkSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">ID Jaringan (TMDB ID) *</label>
@@ -787,18 +604,40 @@ export default function AdminPage() {
               >
                 {networkState === "submitting" ? "Menyimpan..." : "💾 Simpan Network Backdrop"}
               </button>
-              {networkMessage && (
-                <div
-                  className={`p-3 rounded-lg text-sm ${
-                    networkMessage.startsWith("✅")
-                      ? "bg-green-900/30 border border-green-700 text-green-300"
-                      : "bg-red-900/30 border border-red-700 text-red-300"
-                  }`}
-                >
-                  {networkMessage}
-                </div>
-              )}
             </form>
+          </section>
+        )}
+
+        {activeTab === "manage" && (
+          <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+            <h2 className="text-xl font-bold mb-4">⚙️ Pengaturan & Manajemen</h2>
+            <p className="text-zinc-400 text-sm mb-6">Kelola pengaturan situs dan konten yang sudah ada.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Link href="/admin/content" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
+                <h3 className="font-semibold text-white mb-1">📝 Kelola Konten</h3>
+                <p className="text-xs text-zinc-400">Tambah, edit, atau hapus konten.</p>
+              </Link>
+              <Link href="/admin/local" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
+                <h3 className="font-semibold text-white mb-1">📁 Kelola Konten Lokal</h3>
+                <p className="text-xs text-zinc-400">Kelola konten dari file lokal.</p>
+              </Link>
+              <Link href="/admin/videos" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
+                <h3 className="font-semibold text-white mb-1">🎬 Kelola Video Source</h3>
+                <p className="text-xs text-zinc-400">Ubah URL, tipe, atau kualitas video.</p>
+              </Link>
+              <Link href="/admin/settings" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
+                <h3 className="font-semibold text-white mb-1">⚙️ Pengaturan Situs</h3>
+                <p className="text-xs text-zinc-400">Ubah judul, warna, dan fitur situs.</p>
+              </Link>
+              <Link href="/admin/import" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
+                <h3 className="font-semibold text-white mb-1">📥 Import Konten</h3>
+                <p className="text-xs text-zinc-400">Import banyak konten sekaligus.</p>
+              </Link>
+              <Link href="/admin/videos/episodes" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
+                <h3 className="font-semibold text-white mb-1">🎞️ Episode Series</h3>
+                <p className="text-xs text-zinc-400">Kelola video episode series.</p>
+              </Link>
+            </div>
           </section>
         )}
       </main>

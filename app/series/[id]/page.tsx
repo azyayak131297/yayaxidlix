@@ -1,7 +1,10 @@
-import { fetchSeriesDetails, fetchSeasonDetails, fetchTrending } from "@/lib/tmdb"
+import { fetchSeriesDetails, fetchSeasonDetails, fetchTrending, fetchSeriesCredits } from "@/lib/tmdb"
 import { prisma } from "@/lib/prisma"
 import { getEpisodeVideoSource, loadVideoSources, type VideoSource } from "@/lib/video-sources"
+import { getLocalContentById, loadLocalContent } from "@/lib/local-content"
+import { loadSiteSettings } from "@/lib/site-settings"
 import { VideoPlayer } from "@/components/VideoPlayer"
+import { VideoProgress } from "@/components/VideoProgress"
 import { ContentRow } from "@/components/ContentRow"
 import { Header } from "@/components/Header"
 import { WatchlistToggle } from "@/components/WatchlistToggle"
@@ -40,10 +43,12 @@ async function getRelated() {
 export default async function SeriesPage({ params }: SeriesPageProps) {
   const { id } = await params
   const isCustomId = id.startsWith("custom-")
+  const isLocalId = id.startsWith("local-")
   const videoSources = loadVideoSources()
 
   let series: any = null
   let customId: string | undefined
+  let localContent: any = null
 
   if (isCustomId) {
     customId = id
@@ -61,6 +66,19 @@ export default async function SeriesPage({ params }: SeriesPageProps) {
         </div>
       )
     }
+  } else if (isLocalId) {
+    localContent = getLocalContentById(id)
+    if (!localContent) {
+      return (
+        <div className="min-h-screen bg-black text-white flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-2">Serial tidak ditemukan</h1>
+            <p className="text-zinc-400">Konten lokal ini belum diisi di data/local-content.json.</p>
+          </div>
+        </div>
+      )
+    }
+    series = localContent
   } else {
     series = await fetchSeriesDetails(id)
 
@@ -79,9 +97,9 @@ export default async function SeriesPage({ params }: SeriesPageProps) {
   const related = await getRelated()
   const relatedFiltered = related
     .filter((item: any) => item.media_type === "tv")
-    .filter((item: any) => isCustomId ? false : item.id !== series.id)
+    .filter((item: any) => isCustomId || isLocalId ? false : item.id !== series.id)
 
-  const isTmdb = !isCustomId
+  const isTmdb = !isCustomId && !isLocalId
   const name = series.name || "Tanpa Judul"
   const posterPath = isTmdb ? series.poster_path : series.posterPath || ""
   const backdropPath = isTmdb ? series.backdrop_path : series.backdropPath || ""
@@ -100,6 +118,9 @@ export default async function SeriesPage({ params }: SeriesPageProps) {
 
   const watchHref = isCustomId ? `/watch/tv/${id}` : `/watch/tv/${series.id}`
   const contentIdForWatchlist = isCustomId ? id : String(series.id)
+  const credits = isTmdb ? await fetchSeriesCredits(id) : null
+  const cast = credits?.cast?.slice(0, 12) || []
+  const settings = loadSiteSettings()
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -155,6 +176,55 @@ export default async function SeriesPage({ params }: SeriesPageProps) {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {settings.features.showTrailer && isTmdb && series.videos?.results?.length ? (
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold mb-6">Trailer</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {series.videos.results
+                .filter((v: any) => v.type === "Trailer" && v.site === "YouTube")
+                .slice(0, 2)
+                .map((video: any) => (
+                  <div key={video.id} className="aspect-video w-full">
+                    <iframe
+                      src={`https://www.youtube.com/embed/${video.key}`}
+                      title={video.name}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full rounded-lg"
+                    />
+                  </div>
+                ))}
+            </div>
+          </section>
+        ) : null}
+
+        {settings.features.showCast && isTmdb && cast.length > 0 && (
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold mb-6">Pemeran</h2>
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+              {cast.map((person) => (
+                <div key={person.id} className="flex-shrink-0 w-36 text-center">
+                  <div className="relative aspect-square w-full overflow-hidden rounded-full bg-zinc-800 mb-2">
+                    {person.profile_path ? (
+                      <Image
+                        src={`https://image.tmdb.org/t/p/w200${person.profile_path}`}
+                        alt={person.name}
+                        fill
+                        className="object-cover"
+                        sizes="144px"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-zinc-500 text-2xl">👤</div>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium text-white truncate">{person.name}</p>
+                  <p className="text-xs text-zinc-400 truncate">{person.character}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {isTmdb && seasons.length > 0 && (
           <section className="mb-16">
             <h2 className="text-2xl font-bold mb-6">Musim</h2>
@@ -221,9 +291,11 @@ export default async function SeriesPage({ params }: SeriesPageProps) {
                       </span>
                     </summary>
                     <div className="px-4 pb-4 pt-2">
-                      <VideoPlayer
+                      <VideoProgress
+                        contentId={id}
+                        contentType="tv"
+                        episodeKey={`${id}_s${seasonDetails.season_number}e${episode.episode_number}`}
                         source={videoSource}
-                        title={`${name} - S${seasonDetails.season_number} E${episode.episode_number}`}
                       />
                     </div>
                   </details>
@@ -236,9 +308,10 @@ export default async function SeriesPage({ params }: SeriesPageProps) {
         {!isTmdb && (
           <section className="mb-16">
             <h2 className="text-2xl font-bold mb-6">Putar Serial</h2>
-            <VideoPlayer
+            <VideoProgress
+              contentId={id}
+              contentType="tv"
               source={videoSources.custom[customId || ""] || null}
-              title={name}
             />
           </section>
         )}
