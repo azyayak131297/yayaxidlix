@@ -15,6 +15,12 @@ type SiteSettingsData = {
     showTrailer: boolean
     showCast: boolean
   }
+  backgrounds: {
+    homeGenre: string
+    homeCountry: string
+    homeYear: string
+    homeNetwork: string
+  }
 }
 
 const defaultSettings: SiteSettingsData = {
@@ -29,6 +35,12 @@ const defaultSettings: SiteSettingsData = {
     showLocal: true,
     showTrailer: true,
     showCast: true,
+  },
+  backgrounds: {
+    homeGenre: "https://picsum.photos/seed/genre-bg/600/400",
+    homeCountry: "https://picsum.photos/seed/country-bg/600/400",
+    homeYear: "https://picsum.photos/seed/year-bg/600/400",
+    homeNetwork: "https://picsum.photos/seed/network-bg/600/400",
   },
 }
 
@@ -142,6 +154,29 @@ export default function SettingsForm() {
               <span className="text-sm text-zinc-200">{item.label}</span>
             </label>
           ))}
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+        <h2 className="text-lg font-bold mb-4">Background Homepage</h2>
+        <p className="text-xs text-zinc-400 mb-4">Masukkan URL gambar untuk setiap section di homepage.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-zinc-300 mb-1">Genre Background URL</label>
+            <input className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm text-white" value={settings.backgrounds.homeGenre} onChange={(e) => update("backgrounds", "homeGenre", e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-300 mb-1">Negara Background URL</label>
+            <input className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm text-white" value={settings.backgrounds.homeCountry} onChange={(e) => update("backgrounds", "homeCountry", e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-300 mb-1">Tahun Background URL</label>
+            <input className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm text-white" value={settings.backgrounds.homeYear} onChange={(e) => update("backgrounds", "homeYear", e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-300 mb-1">Jaringan Background URL</label>
+            <input className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm text-white" value={settings.backgrounds.homeNetwork} onChange={(e) => update("backgrounds", "homeNetwork", e.target.value)} />
+          </div>
         </div>
       </section>
 

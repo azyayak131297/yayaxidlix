@@ -15,6 +15,12 @@ export interface SiteSettings {
     showTrailer: boolean
     showCast: boolean
   }
+  backgrounds: {
+    homeGenre: string
+    homeCountry: string
+    homeYear: string
+    homeNetwork: string
+  }
 }
 
 let cachedSettings: SiteSettings = {
@@ -30,6 +36,12 @@ let cachedSettings: SiteSettings = {
     showLocal: true,
     showTrailer: true,
     showCast: true,
+  },
+  backgrounds: {
+    homeGenre: "https://picsum.photos/seed/genre-bg/600/400",
+    homeCountry: "https://picsum.photos/seed/country-bg/600/400",
+    homeYear: "https://picsum.photos/seed/year-bg/600/400",
+    homeNetwork: "https://picsum.photos/seed/network-bg/600/400",
   },
 }
 
