@@ -314,26 +314,26 @@ export default async function Home() {
 
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
-                <Link href="/genre" className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-zinc-900 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1" style={{ backgroundImage: `url(${settings.backgrounds.homeGenre})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <Link href="/genre" className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-zinc-900 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 opacity-80 hover:opacity-100" style={{ backgroundImage: `url(${settings.backgrounds.homeGenre})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-white group-hover:text-red-400 transition-colors font-semibold text-sm md:text-base drop-shadow">Genre</span>
                   </div>
                 </Link>
-                <Link href="/country" className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-zinc-900 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1" style={{ backgroundImage: `url(${settings.backgrounds.homeCountry})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <Link href="/country" className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-zinc-900 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 opacity-80 hover:opacity-100" style={{ backgroundImage: `url(${settings.backgrounds.homeCountry})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-white group-hover:text-red-400 transition-colors font-semibold text-sm md:text-base drop-shadow">Negara</span>
                   </div>
                 </Link>
-                <Link href="/year" className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-zinc-900 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1" style={{ backgroundImage: `url(${settings.backgrounds.homeYear})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <Link href="/year" className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-zinc-900 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 opacity-80 hover:opacity-100" style={{ backgroundImage: `url(${settings.backgrounds.homeYear})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-white group-hover:text-red-400 transition-colors font-semibold text-sm md:text-base drop-shadow">Tahun</span>
                   </div>
                 </Link>
-                <Link href="/network" className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-zinc-900 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1" style={{ backgroundImage: `url(${settings.backgrounds.homeNetwork})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <Link href="/network" className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-zinc-900 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 opacity-80 hover:opacity-100" style={{ backgroundImage: `url(${settings.backgrounds.homeNetwork})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-white group-hover:text-red-400 transition-colors font-semibold text-sm md:text-base drop-shadow">Jaringan</span>
                   </div>
