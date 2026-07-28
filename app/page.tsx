@@ -314,28 +314,28 @@ export default async function Home() {
 
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Link href="/genre" className="group relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-900">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                <Link href="/genre" className="group relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-900" style={{ backgroundImage: 'url(https://picsum.photos/seed/genre-bg/600/400)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center p-4">
-                    <span className="text-white group-hover:transition-colors font-semibold" style={{ "--tw-text-opacity": "1" } as any}>Genre</span>
+                    <span className="text-white group-hover:transition-colors font-semibold drop-shadow" style={{ "--tw-text-opacity": "1" } as any}>Genre</span>
                   </div>
                 </Link>
-                <Link href="/country" className="group relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-900">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                <Link href="/country" className="group relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-900" style={{ backgroundImage: 'url(https://picsum.photos/seed/country-bg/600/400)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center p-4">
-                    <span className="text-white group-hover:transition-colors font-semibold">Negara</span>
+                    <span className="text-white group-hover:transition-colors font-semibold drop-shadow">Negara</span>
                   </div>
                 </Link>
-                <Link href="/year" className="group relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-900">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                <Link href="/year" className="group relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-900" style={{ backgroundImage: 'url(https://picsum.photos/seed/year-bg/600/400)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center p-4">
-                    <span className="text-white group-hover:transition-colors font-semibold">Tahun</span>
+                    <span className="text-white group-hover:transition-colors font-semibold drop-shadow">Tahun</span>
                   </div>
                 </Link>
-                <Link href="/network" className="group relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-900">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                <Link href="/network" className="group relative aspect-video w-full overflow-hidden rounded-lg bg-zinc-900" style={{ backgroundImage: 'url(https://picsum.photos/seed/network-bg/600/400)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center p-4">
-                    <span className="text-white group-hover:transition-colors font-semibold">Jaringan</span>
+                    <span className="text-white group-hover:transition-colors font-semibold drop-shadow">Jaringan</span>
                   </div>
                 </Link>
               </div>
