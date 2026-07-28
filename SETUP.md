@@ -1,83 +1,175 @@
 # IDLIX Clone - Setup Guide
 
-## Cara Memindahkan Project ke PC Lain
+## Prerequisites
 
-### 1. Copy Folder Project
-Salin seluruh folder `idlix-clone` ke PC baru.
+- Node.js >= 18.x
+- npm >= 9.x
+- Git
+
+## Installation on Another PC
+
+### 1. Clone Repository
+```bash
+git clone https://github.com/azyayak131297/yayaxidlix.git
+cd yayax-clone
+```
 
 ### 2. Install Dependencies
-```powershell
-cd idlix-clone
+```bash
 npm install
 ```
 
-### 3. Setup Database
-Pilih salah satu:
+### 3. Environment Variables
+Copy `.env.example` to `.env` and fill in the values:
 
-**Opsi A - Gunakan database yang sudah ada:**
-- Copy folder `D:\AI AGENT\LocalHost\idlix-db` ke PC baru
-- Edit `.env`: `DATABASE_URL="file:D:/AI AGENT/LocalHost/idlix-db/dev.db"`
-
-**Opsi B - Buat database baru:**
-```powershell
-npx prisma migrate dev --name init
+```bash
+cp .env.example .env
 ```
 
-### 4. Setup Environment
 Edit `.env`:
 ```env
-DATABASE_URL="file:D:/AI AGENT/LocalHost/idlix-db/dev.db"
-TMDB_API_KEY="isi_dengan_api_key_tmdb_anda"
-NEXTAUTH_SECRET="random_string_untuk_keamanan_auth"
+# Database
+DATABASE_URL="file:./dev.db"
+
+# Authentication
+NEXTAUTH_SECRET="your-secret-key-minimum-32-characters-long"
 NEXTAUTH_URL="http://localhost:3000"
+
+# Optional: Google OAuth
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+
+# Optional: TMDB API
+TMDB_API_KEY="your-tmdb-api-key"
 ```
 
-### 5. Jalankan
-```powershell
+**Note:** Generate a secure secret for `NEXTAUTH_SECRET`:
+```bash
+openssl rand -base64 32
+```
+
+### 4. Database Setup
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+### 5. Create Admin User (First Time Only)
+```bash
+npx tsx --env-file=.env create-admin.ts
+```
+
+Default credentials:
+- Username: `admin`
+- Password: `admin123`
+
+Or set custom credentials via environment variables:
+```env
+ADMIN_USERNAME=admin
+ADMIN_EMAIL=admin@localhost
+ADMIN_PASSWORD=admin123
+```
+
+### 6. Run Development Server
+```bash
 npm run dev
 ```
 
-Buka `http://localhost:3000/admin` untuk mulai menambah konten.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
----
+## Production Build
 
-## Error yang Muncul & Solusinya
-
-### Error 1: Gambar sampul tidak muncul
-**Penyebab:** TMDB_API_KEY belum diisi, dan ada data sample dengan URL gambar yang tidak valid (`example.com`, Google redirect).
-
-**Solusi:**
-1. Isi `TMDB_API_KEY` di `.env` dengan API key dari [themoviedb.org](https://www.themoviedb.org/settings/api)
-2. Restart dev server
-3. Atau hapus data sample yang memiliki posterPath invalid:
-
-```powershell
-# Hapus semua custom content (akan membuat data sampul kosong)
-npx prisma migrate reset --force
+```bash
+npm run build
+npm start
 ```
 
-### Error 2: Klik homepage → "tidak ditemukan TMDB"
-**Penyebab:** Halaman detail masih mencoba fetch data dari TMDB meskipun API key kosong.
+## Features
 
-**Solusi:** 
-- Project sudah mendukung custom content. Buat konten baru via `/admin` → tab "Kelola Video"
-- Atau isi `TMDB_API_KEY` agar data TMDB langsung muncul
+### Local Mode (No TMDB Required)
+- Add content via `/admin/local`
+- Upload images directly via admin panel
+- Manage video sources via `/admin/videos`
 
-### Error 3: PrismaClientInitializationError / database locked
-**Penyebab:** Beberapa proses Node masih menahan file database.
+### Admin Panel
+- URL: `/admin`
+- Unified dashboard for all management tasks
+- Quick add content + video in one form
+- Genre selector with 30+ genres
+- Clone/duplicate existing content
+- Site settings customization
 
-**Solusi:**
-```powershell
-Get-Process node | Stop-Process -Force
-Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
-npm run dev
+### Video Sources
+Supported formats:
+- YouTube
+- Archive.org
+- Vimeo
+- Direct URL
+
+### User Features
+- Watchlist
+- Continue watching
+- Video progress tracking
+- Genre browsing
+- Local content browsing
+
+## Project Structure
+
+```
+idlix-clone/
+├── app/
+│   ├── admin/              # Admin panel pages
+│   ├── api/                # API routes
+│   ├── genre/              # Genre pages
+│   ├── local/              # Local content browsing
+│   └── ...
+├── components/             # Reusable components
+├── data/                   # Local JSON data
+│   ├── genres.json         # Genre definitions
+│   ├── local-content.json  # Local content
+│   └── site-settings.json  # Site configuration
+├── lib/                    # Utility libraries
+├── prisma/                 # Database schema
+└── public/
+    └── uploads/            # Uploaded images
 ```
 
----
+## Troubleshooting
 
-## Catatan Penting
+### Port Already in Use
+```bash
+# Windows
+netstat -ano | findstr :3000
+taskkill /PID <PID> /F
 
-- **Gunakan External Browser** untuk testing (bukan VS Code internal browser)
-- **TMDB_API_KEY** harus diisi agar film dari TMDB muncul
-- **Custom Content** bisa digunakan tanpa TMDB_API_KEY
-- **Video Sources** ditambahkan via tab "Kelola Video" di `/admin`
+# Or use different port
+PORT=3001 npm run dev
+```
+
+### Database Issues
+```bash
+# Reset database
+rm dev.db
+npx prisma db push
+npx tsx --env-file=.env create-admin.ts
+```
+
+### Build Errors
+```bash
+# Clean and rebuild
+rm -rf .next
+npm run build
+```
+
+## Default Credentials
+
+- Admin URL: `/admin`
+- Username: `admin`
+- Password: `admin123`
+
+**Important:** Change the default password after first login via `/admin/settings` or by updating the `.env` file and re-running the admin creation script.
+
+## Support
+
+For issues or questions, check the repository:
+https://github.com/azyayak131297/yayaxidlix
