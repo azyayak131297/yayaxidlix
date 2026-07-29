@@ -15,6 +15,7 @@ model User {
   image         String?
   password      String?
   watchlist     Watchlist[]
+  videoProgress VideoProgress[]
   createdAt     DateTime  @default(now())
 }
 
@@ -53,4 +54,5 @@ model VideoProgress {
   progressSeconds Int      // posisi playback saat ini
   durationSeconds Int      // total durasi video
   updatedAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id])
 }
