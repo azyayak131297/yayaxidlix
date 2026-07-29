@@ -4,6 +4,7 @@ import Link from "next/link"
 import DeleteButton from "./DeleteButton"
 import QuickVideoForm from "@/components/QuickVideoForm"
 import CloneButton from "@/components/CloneButton"
+import AdminContentBulkClient from "./AdminContentBulkClient"
 
 export const dynamic = "force-dynamic"
 
@@ -64,18 +65,37 @@ export default async function AdminContentPage({ searchParams }: AdminContentPag
             Belum ada konten custom. Klik tombol di atas untuk menambahkan.
           </div>
         ) : (
-          <div className="space-y-3">
+          <form action="/api/admin/content/bulk" method="POST" className="space-y-3">
+            <div className="flex items-center justify-between rounded-lg border border-zinc-700 bg-zinc-950 p-3">
+              <div className="flex items-center gap-3">
+                <input type="checkbox" id="select-all" className="h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-red-600 focus:ring-red-500" />
+                <label htmlFor="select-all" className="text-xs text-zinc-300">
+                  Pilih semua ({contents.length})
+                </label>
+              </div>
+              <button type="submit" className="rounded bg-red-900/40 border border-red-800 px-3 py-1.5 text-xs font-medium text-red-200 hover:bg-red-900/70 transition-colors">
+                Hapus yang dipilih
+              </button>
+            </div>
             {contents.map((item) => (
               <div key={item.id} className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-                <div className="min-w-0">
-                  <h3 className="font-medium text-white truncate">{item.title || "Tanpa Judul"}</h3>
-                  <p className="text-xs text-zinc-400 mt-1">
-                    {item.type === "tv" ? "Series" : "Film"}
-                    {item.releaseYear ? ` • ${item.releaseYear}` : ""}
-                    {item.rating ? ` • ⭐ ${Number(item.rating).toFixed(1)}` : ""}
-                    {item.viewCount ? ` • 👁 ${item.viewCount}` : ""}
-                    {item.genres ? ` • ${item.genres}` : ""}
-                  </p>
+                <div className="flex items-center gap-3 min-w-0">
+                  <input
+                    type="checkbox"
+                    name="ids"
+                    value={item.id}
+                    className="h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-red-600 focus:ring-red-500 flex-shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <h3 className="font-medium text-white truncate">{item.title || "Tanpa Judul"}</h3>
+                    <p className="text-xs text-zinc-400 mt-1">
+                      {item.type === "tv" ? "Series" : "Film"}
+                      {item.releaseYear ? ` • ${item.releaseYear}` : ""}
+                      {item.rating ? ` • ⭐ ${Number(item.rating).toFixed(1)}` : ""}
+                      {item.viewCount ? ` • 👁 ${item.viewCount}` : ""}
+                      {item.genres ? ` • ${item.genres}` : ""}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3 ml-4">
                   <Link href={`/admin/content/edit/${item.id}`} className="rounded bg-zinc-800 px-3 py-1.5 text-xs font-medium hover:bg-zinc-700 transition-colors">
@@ -87,9 +107,10 @@ export default async function AdminContentPage({ searchParams }: AdminContentPag
                 </div>
               </div>
             ))}
-          </div>
+          </form>
         )}
       </main>
+      <AdminContentBulkClient />
     </div>
   )
 }
