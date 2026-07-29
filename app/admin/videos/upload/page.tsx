@@ -5,13 +5,16 @@ import { Header } from "@/components/Header"
 import Link from "next/link"
 
 type Provider = "internet-archive" | "doodstream" | "youtube"
+type UploadMode = "file" | "remote"
 
 export default function AdminUploadPage() {
   const [provider, setProvider] = useState<Provider>("internet-archive")
+  const [uploadMode, setUploadMode] = useState<UploadMode>("file")
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [identifier, setIdentifier] = useState("")
   const [file, setFile] = useState<File | null>(null)
+  const [remoteUrl, setRemoteUrl] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -42,18 +45,28 @@ export default function AdminUploadPage() {
     setEmbedUrl(null)
     setVideoUrl(null)
 
-    if (!file && provider !== "youtube") {
-      setError("Please select a video file.")
-      return
-    }
-
     if (!title.trim()) {
       setError("Title is required.")
       return
     }
 
+    if (provider === "internet-archive" && uploadMode === "file" && !file) {
+      setError("Please select a video file.")
+      return
+    }
+
     if (provider === "internet-archive" && !identifier.trim()) {
       setError("Identifier is required for Internet Archive.")
+      return
+    }
+
+    if (provider === "doodstream" && uploadMode === "remote" && !remoteUrl.trim()) {
+      setError("Remote URL is required for DoodStream remote upload.")
+      return
+    }
+
+    if (provider === "doodstream" && uploadMode === "file" && !file) {
+      setError("Please select a video file.")
       return
     }
 
@@ -69,10 +82,19 @@ export default function AdminUploadPage() {
       formData.append("provider", provider)
       formData.append("title", title.trim())
       formData.append("description", description.trim())
+      formData.append("uploadMode", uploadMode)
 
       if (provider === "internet-archive") {
         formData.append("identifier", identifier.trim())
-        formData.append("file", file as Blob)
+        if (file) formData.append("file", file)
+      }
+
+      if (provider === "doodstream") {
+        if (uploadMode === "remote") {
+          formData.append("remoteUrl", remoteUrl.trim())
+        } else if (file) {
+          formData.append("file", file)
+        }
       }
 
       if (provider === "youtube") {
@@ -94,7 +116,7 @@ export default function AdminUploadPage() {
         setSuccess("Video uploaded to Internet Archive successfully!")
         setEmbedUrl(`https://archive.org/embed/${identifier.trim()}`)
       } else if (provider === "doodstream") {
-        setSuccess("Video uploaded to DoodStream successfully!")
+        setSuccess(uploadMode === "remote" ? "Remote upload started on DoodStream!" : "Video uploaded to DoodStream successfully!")
         setEmbedUrl(data.embedUrl)
       } else if (provider === "youtube") {
         setSuccess("YouTube video added successfully!")
@@ -105,6 +127,7 @@ export default function AdminUploadPage() {
       setDescription("")
       setIdentifier(generateIdentifier(""))
       setFile(null)
+      setRemoteUrl("")
       setVideoUrl(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred.")
@@ -203,17 +226,63 @@ export default function AdminUploadPage() {
           )}
 
           {provider === "doodstream" && (
-            <div>
-              <label className="block text-sm font-medium mb-1" htmlFor="file">Video File</label>
-              <input
-                id="file"
-                type="file"
-                accept="video/*"
-                required
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm text-white file:text-zinc-300 file:bg-zinc-800 file:border-0 file:px-3 file:py-1"
-              />
-              <p className="text-xs text-zinc-500 mt-1">Max file size: 5GB (free), 20GB (premium). Supported: MP4, AVI, MOV, MKV</p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-2">Upload Mode</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setUploadMode("file")}
+                    className={`rounded px-4 py-2 text-sm font-medium transition-colors ${
+                      uploadMode === "file"
+                        ? "bg-red-600 text-white"
+                        : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                    }`}
+                  >
+                    Upload File
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUploadMode("remote")}
+                    className={`rounded px-4 py-2 text-sm font-medium transition-colors ${
+                      uploadMode === "remote"
+                        ? "bg-red-600 text-white"
+                        : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                    }`}
+                  >
+                    Remote URL
+                  </button>
+                </div>
+              </div>
+
+              {uploadMode === "file" ? (
+                <div>
+                  <label className="block text-sm font-medium mb-1" htmlFor="file">Video File</label>
+                  <input
+                    id="file"
+                    type="file"
+                    accept="video/*"
+                    required
+                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm text-white file:text-zinc-300 file:bg-zinc-800 file:border-0 file:px-3 file:py-1"
+                  />
+                  <p className="text-xs text-zinc-500 mt-1">Max file size: 5GB (free), 20GB (premium). Supported: MP4, AVI, MOV, MKV</p>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium mb-1" htmlFor="remoteUrl">Direct Video URL *</label>
+                  <input
+                    id="remoteUrl"
+                    type="url"
+                    required
+                    value={remoteUrl}
+                    onChange={(e) => setRemoteUrl(e.target.value)}
+                    placeholder="https://example.com/video.mp4"
+                    className="w-full rounded bg-zinc-900 border border-zinc-700 px-3 py-2 text-sm text-white placeholder-zinc-500"
+                  />
+                  <p className="text-xs text-zinc-500 mt-1">Paste a direct link to an MP4/AVI/MOV/MKV file. DoodStream will download and process it.</p>
+                </div>
+              )}
             </div>
           )}
 

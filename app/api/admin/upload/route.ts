@@ -196,6 +196,29 @@ async function uploadToDoodStream(file: File, title: string, description: string
   }
 }
 
+async function remoteUploadToDoodStream(remoteUrl: string, title: string, description: string): Promise<{ key: string; embedUrl: string }> {
+  const apiKey = process.env.DOODSTREAM_API_KEY
+
+  if (!apiKey) {
+    throw new Error("DoodStream API key is not configured. Please set DOODSTREAM_API_KEY environment variable. Get your API key at https://doodstream.com/settings")
+  }
+
+  const res = await fetch(`https://doodapi.co/api/upload/url?key=${encodeURIComponent(apiKey)}&url=${encodeURIComponent(remoteUrl)}&new_title=${encodeURIComponent(title)}`)
+  const data = await res.json()
+
+  if (!res.ok || data.status !== 200 || !data.result?.filecode) {
+    throw new Error(`Failed to start remote upload on DoodStream: ${data.msg || "Unknown error"}`)
+  }
+
+  const fileCode = data.result.filecode
+  const embedUrl = `https://dood.la/e/${fileCode}`
+
+  return {
+    key: fileCode,
+    embedUrl,
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData()
@@ -205,6 +228,8 @@ export async function POST(request: Request) {
     const file = formData.get("file") as File | null
     const identifier = (formData.get("identifier") as string) || ""
     const videoUrl = (formData.get("videoUrl") as string) || ""
+    const remoteUrl = (formData.get("remoteUrl") as string) || ""
+    const uploadMode = (formData.get("uploadMode") as string) || "file"
 
     if (!title.trim()) {
       return NextResponse.json({ message: "Title is required" }, { status: 400 })
@@ -245,6 +270,33 @@ export async function POST(request: Request) {
     }
 
     if (provider === "doodstream") {
+      if (uploadMode === "remote") {
+        if (!remoteUrl.trim()) {
+          return NextResponse.json({ message: "Remote URL is required for DoodStream remote upload" }, { status: 400 })
+        }
+
+        result = await remoteUploadToDoodStream(remoteUrl.trim(), title.trim(), description.trim())
+
+        const videoSource: VideoSource = {
+          type: "doodstream",
+          url: result.embedUrl,
+          label: `DoodStream: ${title.trim()}`,
+          quality: "720p",
+        }
+
+        const data = await loadVideoSources()
+        data.custom[result.key] = videoSource
+        await fs.writeFile(VIDEO_SOURCES_PATH, JSON.stringify(data, null, 2), "utf-8")
+        invalidateVideoSourcesCache()
+
+        return NextResponse.json({
+          message: "Remote upload started on DoodStream successfully",
+          identifier: result.key,
+          embedUrl: result.embedUrl,
+          key: result.key,
+        })
+      }
+
       if (!file) {
         return NextResponse.json({ message: "File is required for DoodStream upload" }, { status: 400 })
       }
