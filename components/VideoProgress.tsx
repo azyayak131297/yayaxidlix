@@ -30,6 +30,8 @@ export function VideoProgress({
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [videoError, setVideoError] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const playerRef = useRef<HTMLIFrameElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -123,6 +125,14 @@ export function VideoProgress({
     }
   }
 
+  const retryVideo = () => {
+    setVideoError(false)
+    setIsLoading(true)
+    if (videoRef.current) {
+      videoRef.current.load()
+    }
+  }
+
   if (!source) {
     return (
       <div className="relative w-full aspect-video bg-zinc-900 rounded-lg flex items-center justify-center">
@@ -159,6 +169,27 @@ export function VideoProgress({
 
       {isDirect ? (
         <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
+          {videoError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900 z-10">
+              <div className="text-zinc-400 text-4xl mb-4">⚠️</div>
+              <h3 className="text-white text-lg font-medium mb-2">Gagal memuat video</h3>
+              <p className="text-zinc-500 text-sm mb-4 max-w-md text-center px-4">
+                Video tidak dapat dimuat. Periksa koneksi internet atau coba lagi.
+              </p>
+              <button
+                type="button"
+                onClick={retryVideo}
+                className="rounded bg-red-600 px-4 py-2 text-sm font-bold hover:bg-red-500 transition-colors"
+              >
+                Coba Lagi
+              </button>
+            </div>
+          )}
+          {isLoading && !videoError && (
+            <div className="absolute inset-0 flex items-center justify-center bg-zinc-900 z-10">
+              <div className="text-zinc-400 text-sm">Loading video...</div>
+            </div>
+          )}
           <video
             ref={videoRef}
             src={source.url}
@@ -170,8 +201,15 @@ export function VideoProgress({
             onPlay={handleVideoPlay}
             onPause={handleVideoPause}
             onTimeUpdate={handleTimeUpdate}
-            onLoadedMetadata={handleLoadedMetadata}
+            onLoadedMetadata={() => {
+              handleLoadedMetadata()
+              setIsLoading(false)
+            }}
+            onWaiting={() => setIsLoading(true)}
+            onCanPlay={() => setIsLoading(false)}
             onError={() => {
+              setVideoError(true)
+              setIsLoading(false)
               console.error("Video failed to load:", source.url)
             }}
           />
