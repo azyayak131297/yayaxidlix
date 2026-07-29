@@ -6,7 +6,7 @@ type VideoProgressProps = {
   contentId: string
   contentType: "movie" | "tv"
   episodeKey?: string
-  source?: { type: "archive" | "youtube" | "vimeo" | "direct"; url: string } | null
+  source?: { type: "archive" | "youtube" | "vimeo" | "direct" | "doodstream"; url: string } | null
   poster?: string
   onProgress?: (seconds: number) => void
 }
@@ -22,7 +22,7 @@ export function VideoProgress({
   contentId: string
   contentType: "movie" | "tv"
   episodeKey?: string
-  source?: { type: "archive" | "youtube" | "vimeo" | "direct"; url: string } | null
+  source?: { type: "archive" | "youtube" | "vimeo" | "direct" | "doodstream"; url: string } | null
   poster?: string
   onProgress?: (seconds: number) => void
 }) {
@@ -140,6 +140,7 @@ export function VideoProgress({
   const embedUrl = resolveEmbedUrl(source)
   const isDirect = source.type === "direct"
   const isYouTube = source.type === "youtube"
+  const isDoodStream = source.type === "doodstream"
 
   return (
     <div className="space-y-2">
@@ -175,7 +176,7 @@ export function VideoProgress({
             }}
           />
         </div>
-      ) : isYouTube ? (
+      ) : isYouTube || isDoodStream ? (
         <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
           <iframe
             ref={playerRef}
@@ -185,7 +186,6 @@ export function VideoProgress({
             allowFullScreen
             className="w-full h-full"
             onLoad={() => {
-              // Try to seek to saved position for YouTube
               if (savedProgress && savedProgress > 0) {
                 setTimeout(() => {
                   if (playerRef.current && playerRef.current.contentWindow) {

@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 
 export interface VideoSource {
-  type: "archive" | "youtube" | "vimeo" | "direct"
+  type: "archive" | "youtube" | "vimeo" | "direct" | "doodstream"
   url: string
   label?: string
   quality?: string
@@ -55,7 +55,7 @@ export function loadVideoSources(): VideoSourcesData {
       series: { episodes: {} },
       custom: {},
       defaults: {
-        enabledSources: ["archive", "youtube", "vimeo", "direct"],
+        enabledSources: ["archive", "youtube", "vimeo", "direct", "doodstream"],
         autoPlay: false,
       },
     }
@@ -120,6 +120,13 @@ export function resolveEmbedUrl(source: VideoSource): string {
       const vimeoMatch = source.url.match(/vimeo\.com\/(\d+)/)
       if (vimeoMatch) {
         return `https://player.vimeo.com/video/${vimeoMatch[1]}`
+      }
+      return source.url
+    }
+    case "doodstream": {
+      const match = source.url.match(/dood\.(?:la|to)\/e\/([^?&]+)/)
+      if (match) {
+        return `https://dood.la/e/${match[1]}`
       }
       return source.url
     }

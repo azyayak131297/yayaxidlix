@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 
-type EmbedType = "archive" | "youtube" | "vimeo" | "direct" | "none"
+type EmbedType = "archive" | "youtube" | "vimeo" | "direct" | "doodstream" | "none"
 
 interface VideoSource {
   type: EmbedType
@@ -31,6 +31,13 @@ function resolveEmbedUrl(source: VideoSource): string {
       const vimeoMatch = source.url.match(/vimeo\.com\/(\d+)/)
       if (vimeoMatch) {
         return `https://player.vimeo.com/video/${vimeoMatch[1]}`
+      }
+      return source.url
+    }
+    case "doodstream": {
+      const match = source.url.match(/dood\.(?:la|to)\/e\/([^?&]+)/)
+      if (match) {
+        return `https://dood.la/e/${match[1]}`
       }
       return source.url
     }
@@ -78,6 +85,15 @@ export function VideoPlayer({
   return (
     <div className="w-full">
       <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
+        {embedType === "doodstream" && (
+          <iframe
+            src={embedUrl}
+            className="absolute inset-0 w-full h-full"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+            title={title}
+          />
+        )}
         {embedType === "archive" && (
           <iframe
             src={embedUrl}
