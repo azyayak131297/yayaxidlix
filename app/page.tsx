@@ -56,11 +56,13 @@ export default async function Home() {
   const featuredSeries = series[0]
   const f = featured as any
   const heroTitle = f?.title || f?.name || featuredMovie?.title || featuredSeries?.name || (hasCustom ? customContent[0]?.title : null) || (hasLocal ? localContent[0]?.title : null) || settings.site.title
-  const heroPoster = f?.poster_path || featuredMovie?.poster_path || featuredSeries?.poster_path || null
-  const heroBackdrop = f?.backdrop_path || featuredMovie?.backdrop_path || featuredSeries?.backdrop_path || null
-  const heroYear = f?.release_date?.slice(0, 4) || f?.first_air_date?.slice(0, 4) || featuredMovie?.release_date?.slice(0, 4) || featuredSeries?.first_air_date?.slice(0, 4) || ""
-  const heroRating = f?.vote_average || featuredMovie?.vote_average || featuredSeries?.vote_average
-  const heroOverview = f?.overview || ""
+  const heroPoster = f?.poster_path || featuredMovie?.poster_path || featuredSeries?.poster_path || (hasLocal ? localContent[0]?.posterPath : null) || (hasCustom ? customContent[0]?.posterPath : null)
+  const heroBackdrop = f?.backdrop_path || featuredMovie?.backdrop_path || featuredSeries?.backdrop_path || (hasLocal ? localContent[0]?.backdropPath : null) || (hasCustom ? customContent[0]?.backdropPath : null)
+  const heroYear = f?.release_date?.slice(0, 4) || f?.first_air_date?.slice(0, 4) || featuredMovie?.release_date?.slice(0, 4) || featuredSeries?.first_air_date?.slice(0, 4) || (hasLocal ? String(localContent[0]?.releaseYear || "") : "") || (hasCustom ? String(customContent[0]?.releaseYear || "") : "") || ""
+  const heroRating = f?.vote_average || featuredMovie?.vote_average || featuredSeries?.vote_average || (hasLocal ? localContent[0]?.rating : null) || (hasCustom ? customContent[0]?.rating : null)
+  const heroOverview = f?.overview || (hasLocal ? localContent[0]?.overview : "") || (hasCustom ? customContent[0]?.overview : "") || ""
+  const heroMediaType = f?.media_type || (hasLocal ? localContent[0]?.type : null) || (hasCustom ? customContent[0]?.type : null) || "movie"
+  const heroId = f?.id || (hasLocal ? localContent[0]?.id : null) || (hasCustom ? customContent[0]?.id : null) || null
 
   return (
     <div className="min-h-screen bg-black text-white font-sans">
@@ -91,35 +93,35 @@ export default async function Home() {
           </section>
         )}
 
-        {hasAny && (
-          <>
-            <section className="relative w-full min-h-[70vh] overflow-hidden">
-              {heroBackdrop && (hasTmdb || featured || hasCustom) ? (
+            {hasAny && (
+              <>
+                <section className="relative w-full min-h-[70vh] overflow-hidden">
+              {heroBackdrop && (hasTmdb || featured || hasCustom || hasLocal) ? (
                 <Image
-                  src={`https://image.tmdb.org/t/p/original${heroBackdrop}`}
+                  src={heroBackdrop.startsWith("http") ? heroBackdrop : `https://image.tmdb.org/t/p/original${heroBackdrop}`}
                   alt={heroTitle}
                   fill
                   className="object-cover opacity-40"
                   priority
                 />
-              ) : !heroBackdrop && hasCustom ? (
-                <div className="absolute inset-0 bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900" />
-              ) : null}
+                  ) : !heroBackdrop && (hasCustom || hasLocal) ? (
+                    <div className="absolute inset-0 bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900" />
+                  ) : null}
               <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 items-end">
-                  {heroPoster && (hasTmdb || featured || hasCustom) ? (
+                   {heroPoster && (hasTmdb || featured || hasCustom || hasLocal) ? (
                     <div className="hidden md:block w-48 lg:w-64 flex-shrink-0">
                       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg shadow-2xl">
-                        <Image
-                          src={`https://image.tmdb.org/t/p/w500${heroPoster}`}
-                          alt={heroTitle}
-                          fill
-                          className="object-cover"
-                        />
+                         <Image
+                           src={heroPoster.startsWith("http") ? heroPoster : `https://image.tmdb.org/t/p/w500${heroPoster}`}
+                           alt={heroTitle}
+                           fill
+                           className="object-cover"
+                         />
                       </div>
                     </div>
-                  ) : !heroPoster && hasCustom ? (
+                    ) : !heroPoster && (hasCustom || hasLocal) ? (
                     <div className="hidden md:block w-48 lg:w-64 flex-shrink-0">
                       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-zinc-800 shadow-2xl">
                         <div className="absolute inset-0 flex items-center justify-center text-zinc-500 text-4xl">
@@ -149,13 +151,13 @@ export default async function Home() {
                       </p>
                     )}
                     <div className="flex gap-3">
-                      {f && (
-                        <Link href={f.media_type === "tv" ? `/watch/tv/${f.id}` : `/watch/movie/${f.id}`} className="rounded bg-red-600 px-6 py-3 text-sm font-bold hover:bg-red-500 transition-colors">
+                      {heroId && (
+                        <Link href={heroMediaType === "tv" ? `/watch/tv/${heroId}` : `/watch/movie/${heroId}`} className="rounded bg-red-600 px-6 py-3 text-sm font-bold hover:bg-red-500 transition-colors">
                           ▶ Tonton Sekarang
                         </Link>
                       )}
-                      {f && (
-                        <Link href={f.media_type === "tv" ? `/series/${f.id}` : `/movie/${f.id}`} className="rounded border border-zinc-600 px-6 py-3 text-sm font-medium hover:border-zinc-400 transition-colors">
+                      {heroId && (
+                        <Link href={heroMediaType === "tv" ? `/series/${heroId}` : `/movie/${heroId}`} className="rounded border border-zinc-600 px-6 py-3 text-sm font-medium hover:border-zinc-400 hover:text-white transition-colors">
                           ℹ️ Detail
                         </Link>
                       )}
@@ -197,7 +199,7 @@ export default async function Home() {
               </section>
             )}
 
-            {customContent.length > 0 && localContent.length > 0 && (
+            {(customContent.length > 0 || localContent.length > 0) && (
               <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold">Daftar Populer</h2>
@@ -222,7 +224,7 @@ export default async function Home() {
               </section>
             )}
 
-            {customContent.length > 0 && localContent.length > 0 && (
+            {(customContent.length > 0 || localContent.length > 0) && (
               <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold">Terbaru</h2>

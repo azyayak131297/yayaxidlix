@@ -95,7 +95,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
   const overview = movie.overview || ""
   const voteAverage = isTmdb ? movie.vote_average : movie.rating
   const durationMinutes = isTmdb ? movie.runtime : movie.durationMinutes
-  const genres = isTmdb ? movie.genres || [] : (movie.genres || "").split(",").map((g: string) => g.trim()).filter(Boolean)
+  const genres = isTmdb ? movie.genres || [] : Array.isArray(movie.genres) ? movie.genres : String(movie.genres || "").split(",").map((g: string) => g.trim()).filter(Boolean)
 
   const credits = isTmdb ? await fetchMovieCredits(id) : null
   const cast = credits?.cast?.slice(0, 12) || []
