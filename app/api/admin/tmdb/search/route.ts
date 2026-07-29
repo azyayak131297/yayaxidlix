@@ -20,6 +20,10 @@ export async function GET(request: Request) {
     const country = searchParams.get("country") || ""
     const page = parseInt(searchParams.get("page") || "1", 10)
 
+    if (!process.env.TMDB_API_KEY || process.env.TMDB_API_KEY.trim().length === 0) {
+      return NextResponse.json({ message: "TMDB_API_KEY belum dikonfigurasi. Tambahkan TMDB_API_KEY ke file .env untuk menggunakan fitur ini." }, { status: 500 })
+    }
+
     let results: any[] = []
 
     if (query.trim()) {
@@ -45,11 +49,11 @@ export async function GET(request: Request) {
       }
     } else {
       if (type === "tv") {
-        const res = await fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${process.env.TMDB_API_KEY}&language=id-ID&page=${page}&sort_by=popularity.desc`)
+        const res = await fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${encodeURIComponent(process.env.TMDB_API_KEY)}&language=id-ID&page=${page}&sort_by=popularity.desc`)
         const data = await res.json()
         results = data?.results || []
       } else {
-        const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${process.env.TMDB_API_KEY}&language=id-ID&page=${page}&sort_by=popularity.desc`)
+        const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${encodeURIComponent(process.env.TMDB_API_KEY)}&language=id-ID&page=${page}&sort_by=popularity.desc`)
         const data = await res.json()
         results = data?.results || []
       }

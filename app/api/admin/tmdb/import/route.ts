@@ -6,6 +6,10 @@ export const dynamic = "force-dynamic"
 
 export async function POST(request: Request) {
   try {
+    if (!process.env.TMDB_API_KEY || process.env.TMDB_API_KEY.trim().length === 0) {
+      return NextResponse.json({ message: "TMDB_API_KEY belum dikonfigurasi. Tambahkan TMDB_API_KEY ke file .env untuk menggunakan fitur ini." }, { status: 500 })
+    }
+
     const body = await request.json()
     const { items } = body as { items: Array<{ tmdbId: number; mediaType: "movie" | "tv"; title: string; posterPath?: string; backdropPath?: string; overview?: string; releaseYear?: number; rating?: number; durationMinutes?: number; seasons?: number }> }
 
