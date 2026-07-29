@@ -85,7 +85,9 @@ export default async function WatchPage({ params }: WatchPageProps) {
     ? (content as any).durationMinutes
     : (isMovie ? (content as any).runtime : undefined)
   const genres = isCustom
-    ? (((content as any).genres || "").split(",").map((g: string) => g.trim()).filter(Boolean) as string[])
+    ? (Array.isArray((content as any).genres)
+        ? ((content as any).genres as string[])
+        : String((content as any).genres || "").split(",").map((g: string) => g.trim()).filter(Boolean))
     : ((content as any).genres || [])
   const seasons = isCustom
     ? (content as any).seasons
@@ -167,7 +169,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6">▶ Putar Sekarang</h2>
           <div className="rounded-lg overflow-hidden bg-zinc-900 border border-zinc-800">
-            <VideoProgress contentId={id} contentType={type as "movie" | "tv"} episodeKey={isSeries ? `${id}_s1e1` : undefined} source={videoSource} />
+            <VideoProgress contentId={id} contentType={type as "movie" | "tv"} episodeKey={isSeries ? `${id}_s1e1` : undefined} source={videoSource} poster={backdropPath || posterPath || undefined} />
           </div>
         </section>
 

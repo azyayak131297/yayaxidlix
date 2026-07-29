@@ -7,6 +7,7 @@ type VideoProgressProps = {
   contentType: "movie" | "tv"
   episodeKey?: string
   source?: { type: "archive" | "youtube" | "vimeo" | "direct"; url: string } | null
+  poster?: string
   onProgress?: (seconds: number) => void
 }
 
@@ -15,12 +16,14 @@ export function VideoProgress({
   contentType,
   episodeKey,
   source,
+  poster,
   onProgress,
 }: {
   contentId: string
   contentType: "movie" | "tv"
   episodeKey?: string
   source?: { type: "archive" | "youtube" | "vimeo" | "direct"; url: string } | null
+  poster?: string
   onProgress?: (seconds: number) => void
 }) {
   const [savedProgress, setSavedProgress] = useState<number | null>(null)
@@ -158,13 +161,18 @@ export function VideoProgress({
           <video
             ref={videoRef}
             src={source.url}
+            poster={poster}
             className="w-full h-full"
             controls
             controlsList="nodownload"
+            preload="metadata"
             onPlay={handleVideoPlay}
             onPause={handleVideoPause}
             onTimeUpdate={handleTimeUpdate}
             onLoadedMetadata={handleLoadedMetadata}
+            onError={() => {
+              console.error("Video failed to load:", source.url)
+            }}
           />
         </div>
       ) : isYouTube ? (
