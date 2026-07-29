@@ -1,0 +1,60 @@
+{
+  "formatVersion": "1.0",
+  "movies": {},
+  "series": {
+    "episodes": {}
+  },
+  "custom": {
+    "local-31": {
+      "type": "direct",
+      "url": "https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-720p.mp4",
+      "label": "Test Video",
+      "quality": "720p"
+    },
+    "cms2woomb0000jg6swzh52k4j": {
+      "type": "youtube",
+      "url": "https://www.youtube.com/watch?v=TcMBFSGVi1c",
+      "label": "YouTube",
+      "quality": "1080p"
+    },
+    "cms2woor30001jg6sjfjt3hgo": {
+      "type": "youtube",
+      "url": "https://www.youtube.com/watch?v=EXeTwQWrcwY",
+      "label": "YouTube",
+      "quality": "1080p"
+    },
+    "cms2woov40002jg6s1puf2gdb": {
+      "type": "youtube",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "label": "YouTube",
+      "quality": "720p"
+    },
+    "cms2wop0o0003jg6s3syn3aim": {
+      "type": "direct",
+      "url": "https://archive.org/download/Titanic_1997_1080p/Titanic.1997.1080p.BluSea.x264-HDR.mkv",
+      "label": "Archive.org",
+      "quality": "1080p"
+    },
+    "cms2wop500004jg6spg4nl5yi": {
+      "type": "youtube",
+      "url": "https://www.youtube.com/watch?v=zSWdZVtXT7E",
+      "label": "YouTube",
+      "quality": "1080p"
+    },
+    "cms2wop9n0005jg6s8gylxv73": {
+      "type": "archive",
+      "url": "https://archive.org/download/BreakingBadCompleteSeries/Breaking.Bad.S01E01.mkv",
+      "label": "Archive.org",
+      "quality": "720p"
+    }
+  },
+  "defaults": {
+    "enabledSources": [
+      "archive",
+      "youtube",
+      "vimeo",
+      "direct"
+    ],
+    "autoPlay": false
+  }
+}

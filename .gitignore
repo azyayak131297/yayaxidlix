@@ -36,7 +36,6 @@ yarn-error.log*
 local.env
 
 # user video source mappings
-data/video-sources.json
 data/network-backdrops.json
 
 # vercel
