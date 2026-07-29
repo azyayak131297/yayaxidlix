@@ -8,6 +8,7 @@ type VideoProgressProps = {
   episodeKey?: string
   source?: { type: "archive" | "youtube" | "vimeo" | "direct" | "doodstream"; url: string } | null
   poster?: string
+  subtitles?: Array<{ id: string; language: string; label: string; url: string; isDefault?: boolean }>
   onProgress?: (seconds: number) => void
 }
 
@@ -17,6 +18,7 @@ export function VideoProgress({
   episodeKey,
   source,
   poster,
+  subtitles,
   onProgress,
 }: {
   contentId: string
@@ -24,6 +26,7 @@ export function VideoProgress({
   episodeKey?: string
   source?: { type: "archive" | "youtube" | "vimeo" | "direct" | "doodstream"; url: string } | null
   poster?: string
+  subtitles?: Array<{ id: string; language: string; label: string; url: string; isDefault?: boolean }>
   onProgress?: (seconds: number) => void
 }) {
   const [savedProgress, setSavedProgress] = useState<number | null>(null)
@@ -212,7 +215,18 @@ export function VideoProgress({
               setIsLoading(false)
               console.error("Video failed to load:", source.url)
             }}
-          />
+          >
+            {subtitles && subtitles.map((subtitle) => (
+              <track
+                key={subtitle.id}
+                kind="subtitles"
+                src={subtitle.url}
+                srcLang={subtitle.language}
+                label={subtitle.label}
+                default={subtitle.isDefault}
+              />
+            ))}
+          </video>
         </div>
       ) : isYouTube || isDoodStream ? (
         <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">

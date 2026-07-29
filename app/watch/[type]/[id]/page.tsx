@@ -61,6 +61,11 @@ export default async function WatchPage({ params }: WatchPageProps) {
     )
   }
 
+  const subtitles = await prisma.subtitle.findMany({
+    where: { contentId: id, contentType: type as "movie" | "tv" },
+    orderBy: { createdAt: "asc" },
+  })
+
   const isCustom = content.isCustom
   const mediaType = content.mediaType as string
   const isMovie = mediaType === "movie"
@@ -169,7 +174,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6">▶ Putar Sekarang</h2>
           <div className="rounded-lg overflow-hidden bg-zinc-900 border border-zinc-800">
-            <VideoProgress contentId={id} contentType={type as "movie" | "tv"} episodeKey={isSeries ? `${id}_s1e1` : undefined} source={videoSource} poster={backdropPath || posterPath || undefined} />
+            <VideoProgress contentId={id} contentType={type as "movie" | "tv"} episodeKey={isSeries ? `${id}_s1e1` : undefined} source={videoSource} poster={backdropPath || posterPath || undefined} subtitles={subtitles.map((s) => ({ id: s.id, language: s.language, label: s.label, url: s.url, isDefault: s.isDefault }))} />
           </div>
         </section>
 

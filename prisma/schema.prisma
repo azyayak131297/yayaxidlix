@@ -56,3 +56,16 @@ model VideoProgress {
   updatedAt       DateTime @default(now())
   user            User     @relation(fields: [userId], references: [id])
 }
+
+model Subtitle {
+  id          String   @id @default(cuid())
+  contentId   String
+  contentType String   // "movie" atau "tv"
+  episodeKey  String?
+  language    String   // contoh: "id", "en", "es"
+  label       String   // contoh: "Indonesian", "English"
+  url         String   // path atau URL ke file .vtt
+  format      String   @default("vtt") // "vtt" atau "srt"
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
