@@ -408,18 +408,18 @@
       "seasons": null
     },
     {
-      "id": "local-30",
-      "type": "tv",
-      "title": "Soap Opera",
-      "overview": "Sinema surga yang penuh drama.",
-      "posterPath": "https://picsum.photos/seed/soap/500/750",
-      "backdropPath": "https://picsum.photos/seed/soap-bg/1280/720",
-      "releaseYear": 2023,
-      "rating": 7.0,
-      "durationMinutes": 30,
-      "genres": ["Soap"],
+      "id": "local-31",
+      "type": "movie",
+      "title": "Big Buck Bunny",
+      "overview": "Film animasi open source yang digunakan sebagai konten tes. Big Buck Bunny adalah film pendek animasi 3D yang dibuat oleh Peach Open Movie Project.",
+      "posterPath": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Big_buck_bunny_poster_big.jpg/220px-Big_buck_bunny_poster_big.jpg",
+      "backdropPath": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Big_buck_bunny_poster_big.jpg/1200px-Big_buck_bunny_poster_big.jpg",
+      "releaseYear": 2008,
+      "rating": 7.5,
+      "durationMinutes": 10,
+      "genres": ["Animation", "Comedy", "Family"],
       "viewCount": 0,
-      "seasons": 10
-    }
+      "seasons": null
+    },
   ]
 }
