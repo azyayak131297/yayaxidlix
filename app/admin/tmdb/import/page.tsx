@@ -28,16 +28,17 @@ export default function BatchImportPage() {
   const [importing, setImporting] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [page, setPage] = useState(1)
+  const [tmdbEnabled, setTmdbEnabled] = useState<boolean | null>(null)
 
   useEffect(() => {
-    fetch(`${"/api/genres"}`, { cache: "no-store" })
+    fetch(`${"/api/admin/tmdb/search"}?check=true`, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
-        if (data.genres) {
-          setGenres(data.genres)
-        }
+        setTmdbEnabled(data.enabled)
       })
-      .catch(() => {})
+      .catch(() => {
+        setTmdbEnabled(false)
+      })
   }, [])
 
   const handleSearch = async (e: FormEvent) => {
@@ -46,6 +47,12 @@ export default function BatchImportPage() {
     setMessage(null)
     setSelected(new Set())
     setPage(1)
+
+    if (tmdbEnabled === false) {
+      setMessage("TMDB_API_KEY belum dikonfigurasi. Tambahkan TMDB_API_KEY ke file .env untuk menggunakan fitur ini.")
+      setLoading(false)
+      return
+    }
 
     try {
       const params = new URLSearchParams()
@@ -152,6 +159,16 @@ export default function BatchImportPage() {
         {message && (
           <div className="mb-6 rounded-lg border border-zinc-800 bg-zinc-900 p-4">
             <p className="text-sm text-zinc-200">{message}</p>
+          </div>
+        )}
+
+        {tmdbEnabled === false && (
+          <div className="mb-6 rounded-lg border border-yellow-800 bg-yellow-950/40 p-4">
+            <p className="text-sm text-yellow-200 font-medium">TMDB API belum aktif</p>
+            <p className="text-xs text-yellow-300 mt-1">
+              Tambahkan <code className="bg-zinc-800 px-1 rounded">TMDB_API_KEY</code> ke file <code className="bg-zinc-800 px-1 rounded">.env</code> untuk menggunakan fitur batch import.
+              Dapatkan API key di <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer" className="underline">themoviedb.org/settings/api</a>.
+            </p>
           </div>
         )}
 

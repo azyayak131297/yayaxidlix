@@ -6,6 +6,13 @@ export const dynamic = "force-dynamic"
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
+    const check = searchParams.get("check")
+
+    if (check === "true") {
+      const hasApiKey = !!process.env.TMDB_API_KEY && process.env.TMDB_API_KEY.trim().length > 0
+      return NextResponse.json({ enabled: hasApiKey })
+    }
+
     const query = searchParams.get("q") || ""
     const type = searchParams.get("type") || "movie"
     const genreId = searchParams.get("genreId") || ""
