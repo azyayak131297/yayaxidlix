@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import AuthProvider from "@/components/AuthProvider";
 import { SiteSettingsProvider } from "@/components/SiteSettingsProvider";
 import { loadSiteSettings } from "@/lib/site-settings";
+import PWAProvider from "@/components/PWAProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,8 +26,21 @@ export const metadata: Metadata = {
   },
   description: settings.site.description,
   themeColor: settings.site.accentColor,
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: settings.site.title,
+  },
   icons: {
     icon: "/favicon.svg",
+    apple: "/icon-192x192.png",
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
   },
 };
 
@@ -45,9 +59,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <SiteSettingsProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          <PWAProvider>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </PWAProvider>
         </SiteSettingsProvider>
         <Footer />
       </body>
