@@ -35,7 +35,7 @@ function resolveEmbedUrl(source: VideoSource): string {
       return source.url
     }
     case "doodstream": {
-      const match = source.url.match(/dood\.(?:la|to)\/e\/([^?&]+)/)
+      const match = source.url.match(/(?:dood|playmogo)\.(?:la|to|com)\/e\/([^?&]+)/)
       if (match) {
         return `https://dood.la/e/${match[1]}`
       }
