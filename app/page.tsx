@@ -1,4 +1,3 @@
-import { fetchTrending, fetchNowPlayingMovies, fetchOnTheAirSeries, type TmdbTrendingItem, type TmdbMovie, type TmdbSeries } from "@/lib/tmdb"
 import { prisma } from "@/lib/prisma"
 import { ContentCard } from "@/components/ContentCard"
 import { Header } from "@/components/Header"
@@ -36,33 +35,26 @@ async function getContinueWatching() {
 }
 
 export default async function Home() {
-  const [trending, movies, series, customContent, localContent, continueWatching] = await Promise.all([
-    fetchTrending(),
-    fetchNowPlayingMovies(),
-    fetchOnTheAirSeries(),
+  const [customContent, localContent, continueWatching] = await Promise.all([
     getCustomContent(),
     Promise.resolve(loadLocalContent()),
     getContinueWatching(),
   ])
 
   const settings = loadSiteSettings()
-  const hasTmdb = settings.features.showTmdb && (trending.length > 0 || movies.length > 0 || series.length > 0)
   const hasCustom = customContent.length > 0
   const hasLocal = settings.features.showLocal && localContent.length > 0
-  const hasAny = hasTmdb || hasCustom || hasLocal
+  const hasAny = hasCustom || hasLocal
 
-  const featured = hasTmdb ? trending[0] : null
-  const featuredMovie = movies[0]
-  const featuredSeries = series[0]
-  const f = featured as any
-  const heroTitle = f?.title || f?.name || featuredMovie?.title || featuredSeries?.name || (hasCustom ? customContent[0]?.title : null) || (hasLocal ? localContent[0]?.title : null) || settings.site.title
-  const heroPoster = f?.poster_path || featuredMovie?.poster_path || featuredSeries?.poster_path || (hasLocal ? localContent[0]?.posterPath : null) || (hasCustom ? customContent[0]?.posterPath : null)
-  const heroBackdrop = f?.backdrop_path || featuredMovie?.backdrop_path || featuredSeries?.backdrop_path || (hasLocal ? localContent[0]?.backdropPath : null) || (hasCustom ? customContent[0]?.backdropPath : null)
-  const heroYear = f?.release_date?.slice(0, 4) || f?.first_air_date?.slice(0, 4) || featuredMovie?.release_date?.slice(0, 4) || featuredSeries?.first_air_date?.slice(0, 4) || (hasLocal ? String(localContent[0]?.releaseYear || "") : "") || (hasCustom ? String(customContent[0]?.releaseYear || "") : "") || ""
-  const heroRating = f?.vote_average || featuredMovie?.vote_average || featuredSeries?.vote_average || (hasLocal ? localContent[0]?.rating : null) || (hasCustom ? customContent[0]?.rating : null)
-  const heroOverview = f?.overview || (hasLocal ? localContent[0]?.overview : "") || (hasCustom ? customContent[0]?.overview : "") || ""
-  const heroMediaType = f?.media_type || (hasLocal ? localContent[0]?.type : null) || (hasCustom ? customContent[0]?.type : null) || "movie"
-  const heroId = f?.id || (hasLocal ? localContent[0]?.id : null) || (hasCustom ? customContent[0]?.id : null) || null
+  const featured = customContent[0] || localContent[0] || null
+  const heroTitle = featured?.title || settings.site.title
+  const heroPoster = featured?.posterPath || null
+  const heroBackdrop = featured?.backdropPath || null
+  const heroYear = featured?.releaseYear ? String(featured.releaseYear) : ""
+  const heroRating = featured?.rating || null
+  const heroOverview = featured?.overview || ""
+  const heroMediaType = featured?.type || "movie"
+  const heroId = featured?.id || null
 
   return (
     <div className="min-h-screen bg-black text-white font-sans">
@@ -236,71 +228,6 @@ export default async function Home() {
                         href={item.type === "tv" ? `/watch/tv/${item.id}` : `/watch/movie/${item.id}`}
                       />
                     ))}
-                </div>
-              </section>
-            )}
-
-            {hasTmdb && movies.length > 0 && (
-              <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold">Film Terbaru</h2>
-                  <Link href="/tonton" className="text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: settings.site.accentColor }}>Lihat semua →</Link>
-                </div>
-                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                  {movies.slice(0, 20).map((movie: TmdbMovie) => (
-                    <ContentCard
-                      key={movie.id}
-                      id={movie.id}
-                      title={movie.title}
-                      posterPath={movie.poster_path}
-                      releaseDate={movie.release_date}
-                      mediaType="movie"
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {hasTmdb && series.length > 0 && (
-              <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold">Serial Terbaru</h2>
-                  <Link href="/tonton" className="text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: settings.site.accentColor }}>Lihat semua →</Link>
-                </div>
-                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                  {series.slice(0, 20).map((show: TmdbSeries) => (
-                    <ContentCard
-                      key={show.id}
-                      id={show.id}
-                      title={show.name}
-                      posterPath={show.poster_path}
-                      firstAirDate={show.first_air_date}
-                      mediaType="tv"
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {hasTmdb && trending.length > 0 && (
-              <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold">Trending</h2>
-                  <Link href="/tonton" className="text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: settings.site.accentColor }}>Lihat semua →</Link>
-                </div>
-                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                  {trending.slice(0, 20).map((item: TmdbTrendingItem) => (
-                    <ContentCard
-                      key={`${item.media_type}-${item.id}`}
-                      id={item.id}
-                      title={item.title}
-                      name={item.name}
-                      posterPath={item.poster_path}
-                      releaseDate={item.release_date}
-                      firstAirDate={item.first_air_date}
-                      mediaType={item.media_type as "movie" | "tv"}
-                    />
-                  ))}
                 </div>
               </section>
             )}

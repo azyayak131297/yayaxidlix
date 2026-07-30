@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { searchTmdb } from "@/lib/tmdb"
 import { loadLocalContent } from "@/lib/local-content"
 
 export const dynamic = "force-dynamic"
@@ -12,7 +11,7 @@ type SearchResult = {
   backdropPath?: string | null
   releaseYear?: number | null
   type: "movie" | "tv" | "custom"
-  source: "tmdb" | "custom"
+  source: "custom"
   overview?: string | null
 }
 
@@ -27,8 +26,7 @@ export async function GET(request: Request) {
 
     const results: SearchResult[] = []
 
-    const [tmdbResults, customResults, localResults] = await Promise.all([
-      Promise.resolve(searchTmdb(query)),
+    const [customResults, localResults] = await Promise.all([
       prisma.customContent.findMany({
         where: {
           title: {
@@ -39,19 +37,6 @@ export async function GET(request: Request) {
       }),
       Promise.resolve(loadLocalContent()),
     ])
-
-    for (const item of tmdbResults) {
-      results.push({
-        id: String(item.id),
-        title: item.title || item.name || "Untitled",
-        posterPath: item.poster_path,
-        backdropPath: item.backdrop_path,
-        releaseYear: item.release_date || item.first_air_date ? new Date(item.release_date || item.first_air_date || "").getFullYear() : null,
-        type: item.media_type === "tv" ? "tv" : "movie",
-        source: "tmdb",
-        overview: item.overview,
-      })
-    }
 
     for (const item of customResults) {
       results.push({
