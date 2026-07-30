@@ -5,12 +5,6 @@
     "episodes": {}
   },
   "custom": {
-    "local-31": {
-      "type": "direct",
-      "url": "https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-720p.mp4",
-      "label": "Test Video",
-      "quality": "720p"
-    },
     "cms2woomb0000jg6swzh52k4j": {
       "type": "youtube",
       "url": "https://www.youtube.com/watch?v=TcMBFSGVi1c",

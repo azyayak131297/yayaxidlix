@@ -470,24 +470,6 @@
       ],
       "viewCount": 0,
       "seasons": null
-    },
-    {
-      "id": "local-31",
-      "type": "movie",
-      "title": "Big Buck Bunny",
-      "overview": "Film animasi open source yang digunakan sebagai konten tes. Big Buck Bunny adalah film pendek animasi 3D yang dibuat oleh Peach Open Movie Project.",
-      "posterPath": "https://picsum.photos/seed/bigbuck/500/750",
-      "backdropPath": "https://picsum.photos/seed/bigbuck-bg/1280/720",
-      "releaseYear": 2008,
-      "rating": 7.5,
-      "durationMinutes": 10,
-      "genres": [
-        "Animation",
-        "Comedy",
-        "Family"
-      ],
-      "viewCount": 2,
-      "seasons": null
     }
   ]
 }
