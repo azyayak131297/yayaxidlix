@@ -5,6 +5,12 @@
     "episodes": {}
   },
   "custom": {
+    "cms74zpg80000jgg07zfiwg5d": {
+      "type": "youtube",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "label": "YouTube",
+      "quality": "720p"
+    },
     "cms2woomb0000jg6swzh52k4j": {
       "type": "youtube",
       "url": "https://www.youtube.com/watch?v=TcMBFSGVi1c",
