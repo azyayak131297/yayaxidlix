@@ -11,7 +11,9 @@
       "releaseYear": 2024,
       "rating": 7.5,
       "durationMinutes": 120,
-      "genres": ["Action"],
+      "genres": [
+        "Action"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -23,9 +25,11 @@
       "posterPath": "https://picsum.photos/seed/adventure/500/750",
       "backdropPath": "https://picsum.photos/seed/adventure-bg/1280/720",
       "releaseYear": 2023,
-      "rating": 8.0,
+      "rating": 8,
       "durationMinutes": 135,
-      "genres": ["Adventure"],
+      "genres": [
+        "Adventure"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -39,7 +43,9 @@
       "releaseYear": 2024,
       "rating": 8.2,
       "durationMinutes": 95,
-      "genres": ["Animation"],
+      "genres": [
+        "Animation"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -51,9 +57,11 @@
       "posterPath": "https://picsum.photos/seed/comedy/500/750",
       "backdropPath": "https://picsum.photos/seed/comedy-bg/1280/720",
       "releaseYear": 2023,
-      "rating": 7.0,
+      "rating": 7,
       "durationMinutes": 105,
-      "genres": ["Comedy"],
+      "genres": [
+        "Comedy"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -67,7 +75,9 @@
       "releaseYear": 2024,
       "rating": 7.8,
       "durationMinutes": 110,
-      "genres": ["Crime"],
+      "genres": [
+        "Crime"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -81,7 +91,9 @@
       "releaseYear": 2023,
       "rating": 8.5,
       "durationMinutes": 90,
-      "genres": ["Documentary"],
+      "genres": [
+        "Documentary"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -95,7 +107,9 @@
       "releaseYear": 2024,
       "rating": 8.8,
       "durationMinutes": 115,
-      "genres": ["Drama"],
+      "genres": [
+        "Drama"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -109,7 +123,9 @@
       "releaseYear": 2023,
       "rating": 7.2,
       "durationMinutes": 100,
-      "genres": ["Family"],
+      "genres": [
+        "Family"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -121,9 +137,11 @@
       "posterPath": "https://picsum.photos/seed/fantasy/500/750",
       "backdropPath": "https://picsum.photos/seed/fantasy-bg/1280/720",
       "releaseYear": 2024,
-      "rating": 8.0,
+      "rating": 8,
       "durationMinutes": 130,
-      "genres": ["Fantasy"],
+      "genres": [
+        "Fantasy"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -137,7 +155,9 @@
       "releaseYear": 2023,
       "rating": 7.6,
       "durationMinutes": 125,
-      "genres": ["History"],
+      "genres": [
+        "History"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -151,7 +171,9 @@
       "releaseYear": 2024,
       "rating": 7.9,
       "durationMinutes": 98,
-      "genres": ["Horror"],
+      "genres": [
+        "Horror"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -165,7 +187,9 @@
       "releaseYear": 2023,
       "rating": 8.1,
       "durationMinutes": 88,
-      "genres": ["Music"],
+      "genres": [
+        "Music"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -179,7 +203,9 @@
       "releaseYear": 2024,
       "rating": 7.7,
       "durationMinutes": 112,
-      "genres": ["Mystery"],
+      "genres": [
+        "Mystery"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -193,7 +219,9 @@
       "releaseYear": 2023,
       "rating": 7.4,
       "durationMinutes": 108,
-      "genres": ["Romance"],
+      "genres": [
+        "Romance"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -207,7 +235,9 @@
       "releaseYear": 2024,
       "rating": 8.3,
       "durationMinutes": 140,
-      "genres": ["Science Fiction"],
+      "genres": [
+        "Science Fiction"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -221,7 +251,9 @@
       "releaseYear": 2023,
       "rating": 6.9,
       "durationMinutes": 95,
-      "genres": ["TV Movie"],
+      "genres": [
+        "TV Movie"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -235,7 +267,9 @@
       "releaseYear": 2024,
       "rating": 7.8,
       "durationMinutes": 118,
-      "genres": ["Thriller"],
+      "genres": [
+        "Thriller"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -247,9 +281,11 @@
       "posterPath": "https://picsum.photos/seed/war/500/750",
       "backdropPath": "https://picsum.photos/seed/war-bg/1280/720",
       "releaseYear": 2023,
-      "rating": 8.0,
+      "rating": 8,
       "durationMinutes": 150,
-      "genres": ["War"],
+      "genres": [
+        "War"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -263,7 +299,9 @@
       "releaseYear": 2024,
       "rating": 7.3,
       "durationMinutes": 122,
-      "genres": ["Western"],
+      "genres": [
+        "Western"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -277,7 +315,10 @@
       "releaseYear": 2024,
       "rating": 8.1,
       "durationMinutes": 45,
-      "genres": ["Action", "Adventure"],
+      "genres": [
+        "Action",
+        "Adventure"
+      ],
       "viewCount": 0,
       "seasons": 3
     },
@@ -291,7 +332,10 @@
       "releaseYear": 2023,
       "rating": 8.5,
       "durationMinutes": 22,
-      "genres": ["Animation", "Family"],
+      "genres": [
+        "Animation",
+        "Family"
+      ],
       "viewCount": 0,
       "seasons": 2
     },
@@ -305,7 +349,9 @@
       "releaseYear": 2024,
       "rating": 6.5,
       "durationMinutes": 30,
-      "genres": ["News"],
+      "genres": [
+        "News"
+      ],
       "viewCount": 0,
       "seasons": 1
     },
@@ -317,9 +363,11 @@
       "posterPath": "https://picsum.photos/seed/reality/500/750",
       "backdropPath": "https://picsum.photos/seed/reality-bg/1280/720",
       "releaseYear": 2023,
-      "rating": 7.0,
+      "rating": 7,
       "durationMinutes": 45,
-      "genres": ["Reality"],
+      "genres": [
+        "Reality"
+      ],
       "viewCount": 0,
       "seasons": 4
     },
@@ -333,7 +381,10 @@
       "releaseYear": 2024,
       "rating": 8.7,
       "durationMinutes": 50,
-      "genres": ["Science Fiction", "Fantasy"],
+      "genres": [
+        "Science Fiction",
+        "Fantasy"
+      ],
       "viewCount": 0,
       "seasons": 2
     },
@@ -347,7 +398,9 @@
       "releaseYear": 2023,
       "rating": 8.2,
       "durationMinutes": 40,
-      "genres": ["Drama"],
+      "genres": [
+        "Drama"
+      ],
       "viewCount": 0,
       "seasons": 5
     },
@@ -361,7 +414,9 @@
       "releaseYear": 2024,
       "rating": 7.3,
       "durationMinutes": 60,
-      "genres": ["Talk"],
+      "genres": [
+        "Talk"
+      ],
       "viewCount": 0,
       "seasons": 1
     },
@@ -373,9 +428,12 @@
       "posterPath": "https://picsum.photos/seed/war-politics/500/750",
       "backdropPath": "https://picsum.photos/seed/war-politics-bg/1280/720",
       "releaseYear": 2024,
-      "rating": 8.0,
+      "rating": 8,
       "durationMinutes": 140,
-      "genres": ["War", "Politics"],
+      "genres": [
+        "War",
+        "Politics"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -389,7 +447,10 @@
       "releaseYear": 2023,
       "rating": 7.5,
       "durationMinutes": 110,
-      "genres": ["Action", "Comedy"],
+      "genres": [
+        "Action",
+        "Comedy"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -403,7 +464,10 @@
       "releaseYear": 2024,
       "rating": 7.2,
       "durationMinutes": 100,
-      "genres": ["Horror", "Comedy"],
+      "genres": [
+        "Horror",
+        "Comedy"
+      ],
       "viewCount": 0,
       "seasons": null
     },
@@ -417,8 +481,12 @@
       "releaseYear": 2008,
       "rating": 7.5,
       "durationMinutes": 10,
-      "genres": ["Animation", "Comedy", "Family"],
-      "viewCount": 0,
+      "genres": [
+        "Animation",
+        "Comedy",
+        "Family"
+      ],
+      "viewCount": 2,
       "seasons": null
     }
   ]
