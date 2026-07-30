@@ -5,6 +5,12 @@
     "episodes": {}
   },
   "custom": {
+    "local-1": {
+      "type": "youtube",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "label": "YouTube",
+      "quality": "720p"
+    },
     "cms74zpg80000jgg07zfiwg5d": {
       "type": "doodstream",
       "url": "https://playmogo.com/e/uq8ukbyjas9k",
