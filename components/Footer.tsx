@@ -3,17 +3,8 @@ import Image from "next/image"
 export function Footer() {
   return (
     <footer className="relative border-t border-zinc-800 bg-black mt-auto overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <Image
-          src="https://image.tmdb.org/t/p/original/kAvNC1RNhMF5Rz9TGiCaLd4YnBM.jpg"
-          alt=""
-          fill
-          className="object-cover opacity-[0.07] scale-110"
-          priority={false}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 to-black/60" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(220,38,38,0.12)_0%,_transparent_60%)]" />
-      </div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 to-black/60 pointer-events-none" aria-hidden="true" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(220,38,38,0.12)_0%,_transparent_60%)] pointer-events-none" aria-hidden="true" />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col items-center md:items-start gap-2">

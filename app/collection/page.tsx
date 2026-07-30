@@ -2,14 +2,14 @@ import { Header } from "@/components/Header"
 import Link from "next/link"
 
 const COLLECTIONS = [
-  { id: 10, name: "Avengers Saga", poster: "https://image.tmdb.org/t/p/w500/kAvNC1RNhMF5Rz9TGiCaLd4YnBM.jpg", year: "2012" },
-  { id: 18, name: "The Lord of the Rings Trilogy", poster: "https://image.tmdb.org/t/p/w500/6EOpgWmr0m6E6PX5DwRhO61oTMN.jpg", year: "2001" },
-  { id: 140, name: "Harry Potter Collection", poster: "https://image.tmdb.org/t/p/w500/qlm5E8eB1fb5sBrEKY1Cb85MZF2.jpg", year: "2001" },
-  { id: 61, name: "Spider-Man Ultimate", poster: "https://image.tmdb.org/t/p/w500/bNbnAn7YnK0c0Yk9d67B0d4Mh2B.jpg", year: "2002" },
-  { id: 165, name: "John Wick Collection", poster: "https://image.tmdb.org/t/p/w500/pXB0M1qMk3eN2rYxJ3Z1k3Y1Y1F.jpg", year: "2014" },
-  { id: 437, name: "The Fast Saga", poster: "https://image.tmdb.org/t/p/w500/3xL6aMnQ6pYJ9WqK1lL3e3e3e3e.jpg", year: "2001" },
-  { id: 2024340, name: "DCEU Saga", poster: "https://image.tmdb.org/t/p/w500/5bFK5D3mVTAv0XFZ0dU2Q5Y0n6m.png", year: "2013" },
-  { id: 37193, name: "Pixar Collection", poster: "https://image.tmdb.org/t/p/w500/2DlmBnRhbiX37N7h8L3U0HdEb5J.jpg", year: "1995" },
+  { id: 10, name: "Avengers Saga", poster: "https://picsum.photos/seed/avengers/500/750", year: "2012" },
+  { id: 18, name: "The Lord of the Rings Trilogy", poster: "https://picsum.photos/seed/lotr/500/750", year: "2001" },
+  { id: 140, name: "Harry Potter Collection", poster: "https://picsum.photos/seed/harrypotter/500/750", year: "2001" },
+  { id: 61, name: "Spider-Man Ultimate", poster: "https://picsum.photos/seed/spiderman/500/750", year: "2002" },
+  { id: 165, name: "John Wick Collection", poster: "https://picsum.photos/seed/johnwick/500/750", year: "2014" },
+  { id: 437, name: "The Fast Saga", poster: "https://picsum.photos/seed/fast/500/750", year: "2001" },
+  { id: 2024340, name: "DCEU Saga", poster: "https://picsum.photos/seed/dceu/500/750", year: "2013" },
+  { id: 37193, name: "Pixar Collection", poster: "https://picsum.photos/seed/pixar/500/750", year: "1995" },
 ]
 
 COLLECTIONS.sort((a, b) => a.name.localeCompare(b.name))
