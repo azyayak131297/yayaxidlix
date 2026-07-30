@@ -612,29 +612,17 @@ export default function AdminPage() {
             <h2 className="text-xl font-bold mb-4">⚙️ Pengaturan & Manajemen</h2>
             <p className="text-zinc-400 text-sm mb-6">Kelola pengaturan situs dan konten yang sudah ada.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Link href="/admin/content" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
-                <h3 className="font-semibold text-white mb-1">📝 Kelola Konten</h3>
-                <p className="text-xs text-zinc-400">Tambah, edit, atau hapus konten.</p>
-              </Link>
               <Link href="/admin/local" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
-                <h3 className="font-semibold text-white mb-1">📁 Kelola Konten Lokal</h3>
+                <h3 className="font-semibold text-white mb-1">📁 Konten Lokal</h3>
                 <p className="text-xs text-zinc-400">Kelola konten dari file lokal.</p>
               </Link>
               <Link href="/admin/videos" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
-                <h3 className="font-semibold text-white mb-1">🎬 Kelola Video Source</h3>
+                <h3 className="font-semibold text-white mb-1">🎬 Video Source</h3>
                 <p className="text-xs text-zinc-400">Ubah URL, tipe, atau kualitas video.</p>
               </Link>
               <Link href="/admin/settings" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
                 <h3 className="font-semibold text-white mb-1">⚙️ Pengaturan Situs</h3>
                 <p className="text-xs text-zinc-400">Ubah judul, warna, dan fitur situs.</p>
-              </Link>
-              <Link href="/admin/import" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
-                <h3 className="font-semibold text-white mb-1">📥 Import Konten</h3>
-                <p className="text-xs text-zinc-400">Import banyak konten sekaligus.</p>
-              </Link>
-              <Link href="/admin/videos/episodes" className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 hover:border-zinc-600 transition-colors">
-                <h3 className="font-semibold text-white mb-1">🎞️ Episode Series</h3>
-                <p className="text-xs text-zinc-400">Kelola video episode series.</p>
               </Link>
             </div>
           </section>

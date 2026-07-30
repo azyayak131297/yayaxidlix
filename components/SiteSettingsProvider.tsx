@@ -10,7 +10,6 @@ type SiteSettings = {
     logoText: string
   }
   features: {
-    showTmdb: boolean
     showLocal: boolean
     showTrailer: boolean
     showCast: boolean
@@ -31,7 +30,6 @@ const SiteSettingsContext = createContext<SiteSettingsContextValue>({
       logoText: "IDLIX",
     },
     features: {
-      showTmdb: true,
       showLocal: true,
       showTrailer: true,
       showCast: true,
@@ -49,7 +47,6 @@ export function SiteSettingsProvider({ children, initialSettings }: { children: 
       logoText: "IDLIX",
     },
     features: {
-      showTmdb: true,
       showLocal: true,
       showTrailer: true,
       showCast: true,
