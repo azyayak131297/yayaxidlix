@@ -17,18 +17,18 @@ type SearchResult = {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const query = searchParams.get("q")?.trim()
-
-  if (!query) {
-    return NextResponse.json({ data: [] })
-  }
-
-  const results: SearchResult[] = []
-
   try {
+    const { searchParams } = new URL(request.url)
+    const query = searchParams.get("q")?.trim()
+
+    if (!query) {
+      return NextResponse.json({ data: [] })
+    }
+
+    const results: SearchResult[] = []
+
     const [tmdbResults, customResults, localResults] = await Promise.all([
-      searchTmdb(query),
+      Promise.resolve(searchTmdb(query)),
       prisma.customContent.findMany({
         where: {
           title: {
