@@ -57,7 +57,7 @@ export default function RootLayout({
       style={{ ["--accent" as any]: settings.site.accentColor, ["--accent-hover" as any]: settings.site.accentColor }}
     >
       <body className="min-h-full flex flex-col">
-        <SiteSettingsProvider>
+        <SiteSettingsProvider initialSettings={settings}>
           <PWAProvider>
             <AuthProvider>
               {children}

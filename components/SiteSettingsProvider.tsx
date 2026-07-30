@@ -40,8 +40,8 @@ const SiteSettingsContext = createContext<SiteSettingsContextValue>({
   loading: true,
 })
 
-export function SiteSettingsProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<SiteSettings>({
+export function SiteSettingsProvider({ children, initialSettings }: { children: React.ReactNode; initialSettings?: SiteSettings }) {
+  const [settings, setSettings] = useState<SiteSettings>(initialSettings || {
     site: {
       title: "IDLIX",
       description: "Platform streaming pribadi",
@@ -55,9 +55,10 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
       showCast: true,
     },
   })
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!initialSettings)
 
   useEffect(() => {
+    if (initialSettings) return
     let mounted = true
     fetch("/api/admin/settings")
       .then((res) => res.json())
@@ -73,7 +74,7 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
     return () => {
       mounted = false
     }
-  }, [])
+  }, [initialSettings])
 
   return (
     <SiteSettingsContext.Provider value={{ settings, loading }}>
