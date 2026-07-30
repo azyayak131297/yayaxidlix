@@ -1,36 +1,14 @@
 "use client"
 
-import { useState, useEffect, FormEvent } from "react"
-import { useRouter } from "next/navigation"
-import { useSession, signIn } from "next-auth/react"
+import { useState, FormEvent } from "react"
+import { signIn } from "next-auth/react"
 import Link from "next/link"
 
 export default function LoginPage() {
-  const router = useRouter()
-  const { data: session, status } = useSession()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (status === "loading") return
-    if (session?.user) {
-      router.replace("/")
-    }
-  }, [session, status, router])
-
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <div className="text-zinc-400">Memuat...</div>
-      </div>
-    )
-  }
-
-  if (session?.user) {
-    return null
-  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
