@@ -10,7 +10,6 @@ export interface SiteSettings {
     logoText: string
   }
   features: {
-    showTmdb: boolean
     showLocal: boolean
     showTrailer: boolean
     showCast: boolean
@@ -32,7 +31,6 @@ let cachedSettings: SiteSettings = {
     logoText: "IDLIX",
   },
   features: {
-    showTmdb: true,
     showLocal: true,
     showTrailer: true,
     showCast: true,

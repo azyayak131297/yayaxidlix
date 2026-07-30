@@ -7,7 +7,6 @@
     "logoText": "IDLIX"
   },
   "features": {
-    "showTmdb": true,
     "showLocal": true,
     "showTrailer": true,
     "showCast": true

@@ -10,7 +10,6 @@ type SiteSettingsData = {
     logoText: string
   }
   features: {
-    showTmdb: boolean
     showLocal: boolean
     showTrailer: boolean
     showCast: boolean
@@ -31,7 +30,6 @@ const defaultSettings: SiteSettingsData = {
     logoText: "IDLIX",
   },
   features: {
-    showTmdb: true,
     showLocal: true,
     showTrailer: true,
     showCast: true,
@@ -139,7 +137,6 @@ export default function SettingsForm() {
         <h2 className="text-lg font-bold mb-4">Fitur</h2>
         <div className="space-y-3">
           {[
-            { key: "showTmdb", label: "Tampilkan konten TMDB" },
             { key: "showLocal", label: "Tampilkan konten lokal" },
             { key: "showTrailer", label: "Tampilkan trailer" },
             { key: "showCast", label: "Tampilkan daftar pemeran" },
