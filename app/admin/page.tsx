@@ -7,8 +7,6 @@ import { useSession } from "next-auth/react"
 import Link from "next/link"
 import { Header } from "@/components/Header"
 
-export const dynamic = "force-dynamic"
-
 type ContentFormData = {
   title: string
   overview: string
@@ -106,12 +104,13 @@ export default function AdminPage() {
     loadGenres()
   }, [])
 
-  if (status === "loading" || !session?.user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <div className="text-zinc-400">Memuat...</div>
-      </div>
-    )
+  if (status === "loading") {
+    return null
+  }
+
+  if (!session?.user) {
+    router.replace("/login")
+    return null
   }
 
   const toggleGenre = (id: number) => {
